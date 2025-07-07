@@ -80,6 +80,9 @@ export default function RegisterPage() {
                 case 'auth/weak-password':
                     errorMessage = 'A senha é muito fraca. Tente uma senha mais forte.';
                     break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'O cadastro por E-mail/Senha não está habilitado no seu projeto Firebase. Vá para o Console do Firebase > Authentication > Sign-in method e habilite a opção "E-mail/senha".';
+                    break;
                 case 'auth/configuration-not-found':
                     errorMessage = 'Configuração do Firebase não encontrada. Verifique suas variáveis de ambiente NEXT_PUBLIC_FIREBASE_ e reinicie o servidor.';
                     break;
