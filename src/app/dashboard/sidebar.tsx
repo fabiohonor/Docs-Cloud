@@ -13,10 +13,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutDashboard, FilePlus2, LifeBuoy, Settings, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, LifeBuoy, Settings, LogOut, User, Users } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -77,6 +77,26 @@ export function DashboardSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        {userProfile?.role === 'admin' && (
+          <>
+            <SidebarSeparator className="my-2" />
+            <p className="px-4 py-2 text-xs font-semibold text-muted-foreground">Administração</p>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/dashboard/admin/doctors'}
+                  tooltip="Gerenciar Médicos"
+                >
+                  <Link href="/dashboard/admin/doctors">
+                    <Users />
+                    <span>Gerenciar Médicos</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-2">
         <div className="flex flex-col gap-2">
@@ -105,7 +125,7 @@ export function DashboardSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <Separator />
+          <SidebarSeparator />
           {userProfile ? (
             <div className="flex items-center gap-3 p-2 rounded-md">
                 <Avatar className="h-10 w-10">
