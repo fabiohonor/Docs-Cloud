@@ -34,6 +34,7 @@ if (getApps().length > 0) {
 } else {
     console.warn("A configuração do Firebase não foi encontrada ou está incompleta. Adicione as variáveis de ambiente ao seu arquivo .env para conectar ao Firestore.");
     console.warn("Lembre-se de ativar o método de login por Email/Senha no seu console do Firebase e configurar as regras de segurança do Firestore para permitir leitura/escrita na coleção 'users'.");
+    console.warn("IMPORTANTE: Após editar o arquivo .env, você precisa REINICIAR o servidor de desenvolvimento para que as alterações tenham efeito.");
 }
 
 

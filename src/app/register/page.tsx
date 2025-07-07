@@ -65,7 +65,7 @@ export default function RegisterPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth || !db) {
-      toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviços do Firebase não disponíveis. Verifique se as variáveis de ambiente do Firebase estão configuradas.' });
+      toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviços do Firebase não disponíveis. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
       setIsLoading(false);
       return;
     }
@@ -93,7 +93,7 @@ export default function RegisterPage() {
         if (error.code) {
             switch (error.code) {
                 case 'auth/configuration-not-found':
-                    errorMessage = 'Configuração do Firebase não encontrada. Verifique se as variáveis NEXT_PUBLIC_FIREBASE_* estão corretamente configuradas no seu arquivo .env.';
+                    errorMessage = 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.';
                     break;
                 case 'auth/email-already-in-use':
                     errorMessage = 'Este endereço de e-mail já está sendo usado por outra conta.';
