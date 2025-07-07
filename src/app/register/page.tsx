@@ -62,10 +62,10 @@ export default function RegisterPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     if (!auth || !db) {
-      toast({ variant: 'destructive', title: 'Falha na Conexão', description: 'A conexão com o Firebase falhou. Pressione F12 para abrir o console do desenvolvedor e ver o diagnóstico detalhado.' });
+      toast({ variant: 'destructive', title: 'Falha na Conexão', description: 'A conexão com o Firebase falhou. Verifique sua configuração do Firebase no arquivo .env e reinicie o servidor de desenvolvimento.' });
       setIsLoading(false);
       return;
     }
@@ -88,35 +88,12 @@ export default function RegisterPage() {
 
     } catch (error: any) {
         console.error("Erro detalhado no cadastro: ", error);
-        let errorMessage = 'Ocorreu um erro desconhecido. Verifique o console do navegador para mais detalhes.';
-        
-        if (error.code) {
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    errorMessage = 'Este endereço de e-mail já está sendo usado por outra conta.';
-                    break;
-                case 'auth/invalid-email':
-                    errorMessage = 'O formato do e-mail fornecido é inválido.';
-                    break;
-                case 'auth/weak-password':
-                    errorMessage = 'A senha é muito fraca. Por favor, use pelo menos 6 caracteres.';
-                    break;
-                case 'permission-denied':
-                    errorMessage = 'Erro de permissão ao salvar no banco de dados. A causa mais provável é que as regras de segurança do seu Firestore não permitem a criação de novos usuários. Por favor, verifique suas regras de segurança no console do Firebase.';
-                    break;
-                case 'unavailable':
-                    errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet e tente novamente.';
-                    break;
-                default:
-                    errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
-            }
-        }
-        
+        const errorMessage = error.message || 'Ocorreu um erro desconhecido durante o cadastro.';
         toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
