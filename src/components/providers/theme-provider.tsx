@@ -8,7 +8,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-const SETTINGS_DOC_ID = 'user_profile';
+const SETTINGS_DOC_ID = 'app_theme';
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -16,8 +16,6 @@ type ThemeProviderProps = {
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>('blue');
-  const [specialty, setSpecialtyState] = useState<string>('Cardiologista');
-  const [signature, setSignatureState] = useState<string | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [previewTheme, setPreviewThemeState] = useState<Theme | null>(null);
   const { toast } = useToast();
@@ -41,21 +39,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         if (docSnap.exists()) {
           const settings = docSnap.data() as UserSettings;
           setThemeState(settings.theme || 'blue');
-          setSpecialtyState(settings.specialty || 'Cardiologista');
-          setSignatureState(settings.signature || null);
         } else {
           await setDoc(settingsDocRef, {
             theme: 'blue',
-            specialty: 'Cardiologista',
-            signature: null,
           });
         }
       } catch (error) {
-        console.error("Erro ao buscar configurações do usuário:", error);
+        console.error("Erro ao buscar configurações do tema:", error);
         toast({
             variant: 'destructive',
-            title: 'Erro ao Carregar Configurações',
-            description: 'Não foi possível buscar suas preferências. Verifique as regras de segurança do Firestore.'
+            title: 'Erro ao Carregar Tema',
+            description: 'Não foi possível buscar as preferências de tema do sistema.'
         });
       } finally {
         setSettingsLoading(false);
@@ -69,12 +63,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const themeToApply = previewTheme || theme;
     const root = window.document.documentElement;
 
-    // Remove all possible theme classes
     themes.forEach(t => {
       root.classList.remove(`theme-${t.key}`);
     });
 
-    // Add the single, correct theme class
     if (themeToApply) {
       root.classList.add(`theme-${themeToApply}`);
     }
@@ -93,10 +85,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     try {
       await setDoc(settingsDocRef, newSettings, { merge: true });
     } catch (error) {
-        console.error("Erro ao atualizar configuração:", error);
+        console.error("Erro ao atualizar configuração de tema:", error);
         toast({
             variant: 'destructive',
-            title: 'Erro ao Salvar',
+            title: 'Erro ao Salvar Tema',
             description: 'Não foi possível salvar a configuração no banco de dados.'
         });
     }
@@ -108,16 +100,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     updateSetting({ theme: newTheme });
   }, [updateSetting]);
 
-  const setSpecialty = useCallback((newSpecialty: string) => {
-    setSpecialtyState(newSpecialty);
-    updateSetting({ specialty: newSpecialty });
-  }, [updateSetting]);
-
-  const setSignature = useCallback((newSignature: string | null) => {
-    setSignatureState(newSignature);
-    updateSetting({ signature: newSignature });
-  }, [updateSetting]);
-  
   const setPreviewTheme = useCallback((themeToPreview: Theme | null) => {
     setPreviewThemeState(themeToPreview);
   }, []);
@@ -125,10 +107,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const value: ThemeProviderState = {
     theme,
     setTheme,
-    specialty,
-    setSpecialty,
-    signature,
-    setSignature,
     settingsLoading,
     previewTheme,
     setPreviewTheme,

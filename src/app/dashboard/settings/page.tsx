@@ -2,32 +2,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Palette, Check, User } from 'lucide-react';
-import Image from 'next/image';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/hooks/use-auth';
 import { themes } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { 
-    theme, setTheme, 
-    specialty, setSpecialty, 
-    signature, setSignature,
-    settingsLoading,
-    previewTheme, setPreviewTheme
-  } = useTheme();
+  const { theme, setTheme, settingsLoading: themeLoading, previewTheme, setPreviewTheme } = useTheme();
+  const { userProfile, loading: authLoading, updateUserProfile } = useAuth();
 
   const [inputSpecialty, setInputSpecialty] = useState('');
   const [previewSignature, setPreviewSignature] = useState<string | null>(null);
 
-  // When the component mounts, tell the provider to clear any lingering previews.
-  // When it unmounts, also clear previews.
+  const settingsLoading = themeLoading || authLoading;
+
   useEffect(() => {
     setPreviewTheme(null);
     return () => {
@@ -35,14 +31,12 @@ export default function SettingsPage() {
     }
   }, [setPreviewTheme]);
 
-  // Sync local UI state with the global state from the provider once it's loaded.
   useEffect(() => {
-    if (!settingsLoading) {
-      setInputSpecialty(specialty);
-      setPreviewSignature(signature);
+    if (userProfile) {
+      setInputSpecialty(userProfile.specialty || '');
+      setPreviewSignature(userProfile.signature || null);
     }
-  }, [specialty, signature, settingsLoading]);
-
+  }, [userProfile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -58,13 +52,13 @@ export default function SettingsPage() {
         title: 'Formato Inválido',
         description: 'Por favor, selecione um arquivo de imagem no formato PNG.',
       });
-      setPreviewSignature(signature);
+      setPreviewSignature(userProfile?.signature || null);
     }
   };
 
-  const handleSaveSignature = () => {
+  const handleSaveSignature = async () => {
     if (previewSignature) {
-      setSignature(previewSignature);
+      await updateUserProfile({ signature: previewSignature });
       toast({
         title: 'Assinatura Salva',
         description: 'Sua assinatura foi salva com sucesso.',
@@ -72,8 +66,8 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSaveProfile = () => {
-    setSpecialty(inputSpecialty);
+  const handleSaveProfile = async () => {
+    await updateUserProfile({ specialty: inputSpecialty });
     toast({
       title: 'Perfil Salvo',
       description: 'Sua especialidade foi atualizada.',
@@ -90,7 +84,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (settingsLoading) {
+  if (settingsLoading || !userProfile) {
     return (
       <div className="space-y-8">
         <div>
@@ -120,6 +114,7 @@ export default function SettingsPage() {
   }
 
   const displayedTheme = previewTheme || theme;
+  const isDoctor = userProfile.role === 'doctor';
 
   return (
     <div className="space-y-8">
@@ -149,7 +144,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div>
-            <Button onClick={handleSaveProfile} disabled={inputSpecialty === specialty}>
+            <Button onClick={handleSaveProfile} disabled={inputSpecialty === userProfile.specialty}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Perfil
             </Button>
@@ -157,49 +152,51 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Palette /> Tema do Sistema</CardTitle>
-          <CardDescription>
-            Escolha um tema para uma pré-visualização ao vivo e salve para aplicá-lo em todo o sistema.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {themes.map((item) => (
-              <div
-                key={item.key}
-                onClick={() => setPreviewTheme(item.key)}
-                className={cn(
-                  'cursor-pointer rounded-lg border-2 p-4 transition-all',
-                  displayedTheme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
-                )}
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold">{item.name}</h3>
-                  {displayedTheme === item.key && <Check className="h-5 w-5 text-primary" />}
+      {!isDoctor && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Palette /> Tema do Sistema</CardTitle>
+            <CardDescription>
+              Escolha um tema para uma pré-visualização ao vivo e salve para aplicá-lo em todo o sistema.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {themes.map((item) => (
+                <div
+                  key={item.key}
+                  onClick={() => setPreviewTheme(item.key)}
+                  className={cn(
+                    'cursor-pointer rounded-lg border-2 p-4 transition-all',
+                    displayedTheme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
+                  )}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-semibold">{item.name}</h3>
+                    {displayedTheme === item.key && <Check className="h-5 w-5 text-primary" />}
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    {item.palette.map((color, i) => (
+                      <div key={i} className="h-6 w-6 rounded-full" style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Cor principal: {item.palette[3]}</p>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
-                  {item.palette.map((color, i) => (
-                    <div key={i} className="h-6 w-6 rounded-full" style={{ backgroundColor: color }} />
-                  ))}
+              ))}
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-background/50 p-4">
+                <div className="flex items-center gap-4">
+                  <Button>Botão Principal</Button>
+                  <Button variant="secondary">Botão Secundário</Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Cor principal: {item.palette[3]}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between rounded-lg border bg-background/50 p-4">
-              <div className="flex items-center gap-4">
-                <Button>Botão Principal</Button>
-                <Button variant="secondary">Botão Secundário</Button>
-              </div>
-              <Button onClick={handleSaveTheme} disabled={!previewTheme || previewTheme === theme}>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Tema
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                <Button onClick={handleSaveTheme} disabled={!previewTheme || previewTheme === theme}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Tema
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -230,7 +227,7 @@ export default function SettingsPage() {
             </div>
           )}
           <div>
-            <Button onClick={handleSaveSignature} disabled={!previewSignature || previewSignature === signature}>
+            <Button onClick={handleSaveSignature} disabled={!previewSignature || previewSignature === userProfile.signature}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Assinatura
             </Button>

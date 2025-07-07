@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { Report, ReportStatus } from '@/lib/types';
+import type { Report, ReportStatus, UserProfile } from '@/lib/types';
 import {
   collection,
   query,
@@ -47,7 +47,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/hooks/use-auth';
+import Image from 'next/image';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -91,10 +92,11 @@ const formatKey = (key: string): string => {
     .replace(/^./, (str) => str.toUpperCase());
 };
 
-const buildReportHtml = (report: Report, signatureDataUrl: string | null): string => {
+const buildReportHtml = (report: Report, doctorProfile: UserProfile | null): string => {
   if (!report) return '';
 
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
+  const signatureDataUrl = report.signedBy && doctorProfile?.signature ? doctorProfile.signature : null;
 
   let contentHtml = '';
   try {
@@ -135,7 +137,7 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
   }
   
   return `
-    <div style="background-color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; padding: 40px; width: 21cm; min-height: 29.7cm; margin: auto; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <div style="background-color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; padding: 40px; width: 21cm; min-height: 29.7cm; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative;">
       <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 30px;">
         <img src="${logoUrl}" alt="Logo" style="height: 48px; width: auto;" />
         <div style="text-align: right; font-size: 12px; color: #555;">
@@ -150,7 +152,7 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; line-height: 1.6; border: 1px solid #eee; padding: 15px; margin-bottom: 30px; border-radius: 6px;">
           <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
-          <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
+          <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || doctorProfile?.name || ''}</p></div>
       </div>
 
       <main style="padding-bottom: 150px;">
@@ -175,7 +177,7 @@ export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
   const [isDownloading, setIsDownloading] = React.useState<{id: string, format: 'pdf' | 'jpg'} | null>(null);
   const [viewingReport, setViewingReport] = React.useState<Report | null>(null);
-  const { signature } = useTheme();
+  const { userProfile } = useAuth();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -184,7 +186,7 @@ export function ReportTable() {
         variant: 'destructive',
         title: 'Erro de Configuração',
         description:
-          'A conexão com o banco de dados não foi estabelecida. Verifique as credenciais do Firebase em seu arquivo .env.',
+          'A conexão com o banco de dados não foi estabelecida.',
       });
       return;
     }
@@ -221,54 +223,48 @@ export function ReportTable() {
     reportElement.style.left = '-9999px';
     reportElement.style.top = '0';
     
-    reportElement.innerHTML = buildReportHtml(report, signature); 
+    reportElement.innerHTML = buildReportHtml(report, userProfile); 
 
     document.body.appendChild(reportElement);
 
     try {
-        const canvas = await html2canvas(reportElement.firstChild as HTMLElement, { scale: 3, useCORS: true });
-        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        const canvas = await html2canvas(reportElement.firstChild as HTMLElement, {
+          scale: 3,
+          useCORS: true, 
+          allowTaint: true,
+          onclone: (clonedDoc) => {
+              const logo = clonedDoc.querySelector('img[alt="Logo"]');
+              if (logo) {
+                  (logo as HTMLImageElement).src = logo.src + `?t=${new Date().getTime()}`;
+              }
+          }
+      });
 
-        if (format === 'jpg') {
-            const link = document.createElement('a');
-            link.href = imgData;
-            link.download = `laudo-${report.id}.jpg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else if (format === 'pdf') {
-            const pdf = new jsPDF('p', 'in', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const canvasAspectRatio = canvasWidth / canvasHeight;
-            let imgHeight = pdfWidth / canvasAspectRatio;
-            let heightLeft = imgHeight;
-            let position = 0;
-            
-            if (imgHeight > pdfHeight) {
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
-                heightLeft -= pdfHeight;
-    
-                while (heightLeft > 0) {
-                  position = -heightLeft;
-                  pdf.addPage();
-                  pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-                  heightLeft -= pdfHeight;
-                }
-            } else {
-                 pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
-            }
-            
-            pdf.save(`laudo-${report.id}.pdf`);
-        }
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+      if (format === 'jpg') {
+          const link = document.createElement('a');
+          link.href = imgData;
+          link.download = `laudo-${report.id}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      } else if (format === 'pdf') {
+          const pdf = new jsPDF('p', 'in', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const canvasAspectRatio = canvas.width / canvas.height;
+          let imgHeight = pdfWidth / canvasAspectRatio;
+          
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+          
+          pdf.save(`laudo-${report.id}.pdf`);
+      }
     } catch (error) {
         console.error("Erro ao gerar o arquivo:", error);
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo. A causa mais provável é que a imagem da logo não foi encontrada. Por favor, certifique-se de que o arquivo 'logo.png' está na pasta 'public' na raiz do seu projeto (e não na pasta 'src').",
+            description: "Não foi possível gerar o arquivo. A causa mais provável é que a imagem da logo não foi encontrada. Por favor, certifique-se de que o arquivo 'logo.png' está na pasta 'public' na raiz do seu projeto.",
         });
     } finally {
         document.body.removeChild(reportElement);
@@ -277,12 +273,12 @@ export function ReportTable() {
   };
 
   const handleStatusChange = async (id: string, status: ReportStatus) => {
-    if (!db) return;
+    if (!db || !userProfile) return;
     const reportRef = doc(db, 'reports', id);
     try {
       await updateDoc(reportRef, {
         status,
-        signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : null,
+        signedBy: status === 'Aprovado' ? userProfile.name : null,
         signedAt: status === 'Aprovado' ? new Date().toISOString() : null,
       });
       toast({
@@ -366,7 +362,7 @@ export function ReportTable() {
                       </DropdownMenuSub>
 
                       <DropdownMenuSeparator />
-                      {report.status === 'Pendente' && (
+                      {userProfile?.role === 'admin' && report.status === 'Pendente' && (
                         <>
                           <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Aprovado')}>
                             <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
@@ -403,8 +399,8 @@ export function ReportTable() {
           </DialogHeader>
           <div className="flex-grow overflow-y-auto -mx-6 px-1 py-4 bg-muted/50 flex justify-center">
              <div
-                className="scale-[0.85] origin-top"
-                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
+                className="transform scale-[0.85] origin-top"
+                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, userProfile) : '' }}
              />
           </div>
           <DialogFooter className="pt-4 border-t">

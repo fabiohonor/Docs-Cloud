@@ -1,6 +1,8 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -16,6 +18,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Stethoscope, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -29,6 +34,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -38,20 +44,31 @@ export default function LoginPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      // In a real app, you'd verify credentials here.
-      // For this demo, we'll just navigate to the dashboard.
+    if (!auth) {
+        toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviço de autenticação não disponível.' });
+        setIsLoading(false);
+        return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');
-    }, 1500);
+    } catch (error: any) {
+      console.error(error);
+      let errorMessage = 'Ocorreu um erro desconhecido.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        errorMessage = 'E-mail ou senha inválidos. Por favor, tente novamente.';
+      }
+      toast({ variant: 'destructive', title: 'Falha no Login', description: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
       <div className="w-full max-w-5xl flex rounded-2xl shadow-2xl overflow-hidden">
-        {/* Left Pane */}
         <div className="w-2/5 bg-primary p-12 text-primary-foreground flex-col justify-between items-center text-center hidden md:flex">
           <div className="flex items-center gap-2 self-start">
             <Stethoscope className="h-8 w-8" />
@@ -66,13 +83,14 @@ export default function LoginPage() {
             </p>
           </div>
           
-          <Button variant="secondary" className="w-full max-w-xs group">
-            Criar Conta
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Button>
+          <Link href="/register" className='w-full max-w-xs'>
+            <Button variant="secondary" className="w-full group">
+              Criar Conta
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
         </div>
 
-        {/* Right Pane (Form) */}
         <div className="w-full md:w-3/5 bg-card text-card-foreground p-8 sm:p-16 flex flex-col justify-center">
             <h2 className="text-3xl font-bold mb-2">Login</h2>
             <p className="text-muted-foreground">Use suas credenciais para acessar a plataforma.</p>

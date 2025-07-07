@@ -7,10 +7,6 @@ import type { Theme } from '@/lib/types';
 export type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  specialty: string;
-  setSpecialty: (specialty: string) => void;
-  signature: string | null;
-  setSignature: (signature: string | null) => void;
   settingsLoading: boolean;
   previewTheme: Theme | null;
   setPreviewTheme: (theme: Theme | null) => void;
@@ -19,10 +15,6 @@ export type ThemeProviderState = {
 export const initialState: ThemeProviderState = {
   theme: 'blue',
   setTheme: () => null,
-  specialty: 'Cardiologista',
-  setSpecialty: () => {},
-  signature: null,
-  setSignature: () => {},
   settingsLoading: true,
   previewTheme: null,
   setPreviewTheme: () => {},

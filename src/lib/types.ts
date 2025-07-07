@@ -34,6 +34,13 @@ export const themes: ThemeInfo[] = [
 
 export interface UserSettings {
     theme: Theme;
-    specialty: string;
-    signature: string | null;
 }
+
+export type UserProfile = {
+  uid: string;
+  name: string;
+  email: string;
+  specialty: string;
+  signature: string | null;
+  role: 'admin' | 'doctor';
+};
