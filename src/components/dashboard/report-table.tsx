@@ -202,27 +202,26 @@ const buildReportHtml = (report: Report): string => {
         </div>
       </header>
       
-      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px;">
+        <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2;">${report.reportType}</h1>
+      </div>
+
+      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
         <div>
-            <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2;">${report.reportType}</h1>
+          <p style="margin: 0 0 4px 0; font-weight: bold; color: hsl(var(--muted-foreground)); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Paciente</p>
+          <p style="margin: 0; font-weight: 500;">${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
         </div>
         ${
           report.authorInfo
             ? `
         <div style="text-align: right;">
-          <p style="margin: 0; font-weight: bold;">${report.authorInfo.name}</p>
-          <p style="margin: 0; font-size: 12px;">CRM: ${report.authorInfo.crm}</p>
+          <p style="margin: 0 0 4px 0; font-weight: bold; color: hsl(var(--muted-foreground)); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Médico Solicitante</p>
+          <p style="margin: 0; font-weight: 500;">${report.authorInfo.name}</p>
+          <p style="margin: 0; font-size: 12px; color: hsl(var(--muted-foreground));">CRM: ${report.authorInfo.crm}</p>
         </div>
         `
             : ''
         }
-      </div>
-
-      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px;">
-        <div>
-          <p style="margin: 0; font-weight: bold;">Paciente</p>
-          <p style="margin: 0;">${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
-        </div>
       </div>
 
       <main style="padding-bottom: 150px;">
