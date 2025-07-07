@@ -38,6 +38,7 @@ const prompt = ai.definePrompt({
   name: 'summarizeTechnicalDetailsPrompt',
   input: {schema: SummarizeTechnicalDetailsInputSchema},
   output: {schema: SummarizeTechnicalDetailsOutputSchema},
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender.
 
   Por favor, reescreva os seguintes detalhes técnicos de uma forma amigável para o paciente:

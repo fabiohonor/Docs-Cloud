@@ -39,6 +39,7 @@ const generateReportDraftPrompt = ai.definePrompt({
   name: 'generateReportDraftPrompt',
   input: {schema: GenerateReportDraftInputSchema},
   output: {schema: GenerateReportDraftOutputSchema},
+  model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de IA que ajuda médicos a gerar laudos médicos.
 
   Com base nas anotações fornecidas, gere um rascunho do laudo médico para o paciente.

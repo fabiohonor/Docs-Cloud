@@ -63,7 +63,6 @@ export default function NewReportPage() {
       toast({ variant: 'destructive', title: 'Erro', description: result.error });
     } else if (result.draft) {
       form.setValue('draft', result.draft);
-      toast({ title: 'Sucesso', description: 'Rascunho do laudo gerado com sucesso.' });
     }
   };
 
