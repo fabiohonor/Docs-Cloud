@@ -47,7 +47,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth) {
-        toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviço de autenticação não disponível.' });
+        toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviço de autenticação não disponível. Verifique se as variáveis de ambiente do Firebase estão configuradas.' });
         setIsLoading(false);
         return;
     }
@@ -55,10 +55,21 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');
     } catch (error: any) {
-      console.error(error);
+      console.error("Erro detalhado no login: ", error);
       let errorMessage = 'Ocorreu um erro desconhecido.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = 'E-mail ou senha inválidos. Por favor, tente novamente.';
+      if (error.code) {
+        switch (error.code) {
+            case 'auth/configuration-not-found':
+                errorMessage = 'Configuração do Firebase não encontrada. Verifique se as variáveis NEXT_PUBLIC_FIREBASE_* estão corretamente configuradas no seu arquivo .env.';
+                break;
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                errorMessage = 'E-mail ou senha inválidos. Por favor, tente novamente.';
+                break;
+            default:
+                errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
+        }
       }
       toast({ variant: 'destructive', title: 'Falha no Login', description: errorMessage });
     } finally {
