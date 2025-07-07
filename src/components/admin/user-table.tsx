@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -138,6 +139,7 @@ export function UserTable() {
             <TableHead>Nome</TableHead>
             <TableHead>E-mail</TableHead>
             <TableHead>Especialidade</TableHead>
+            <TableHead>CRM</TableHead>
             <TableHead>Função</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -148,6 +150,7 @@ export function UserTable() {
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.specialty}</TableCell>
+              <TableCell>{user.crm}</TableCell>
               <TableCell>
                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className={cn(
                     user.role === 'admin' && 'bg-primary/80 text-primary-foreground'

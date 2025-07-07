@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Reescreve detalhes médicos técnicos em uma linguagem amigável para o paciente.
@@ -39,9 +40,9 @@ const prompt = ai.definePrompt({
   input: {schema: SummarizeTechnicalDetailsInputSchema},
   output: {schema: SummarizeTechnicalDetailsOutputSchema},
   model: 'googleai/gemini-1.5-flash-latest',
-  prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender.
+  prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender, em Português do Brasil.
 
-  Por favor, reescreva os seguintes detalhes técnicos de uma forma amigável para o paciente e retorne o resultado no formato JSON solicitado.
+  Por favor, reescreva os seguintes detalhes técnicos em uma linguagem simples e clara, em Português do Brasil (pt-BR), e retorne o resultado no formato JSON solicitado.
   
   Detalhes Técnicos: {{{technicalDetails}}}`,
 });

@@ -1,4 +1,12 @@
+
 export type ReportStatus = 'Rascunho' | 'Pendente' | 'Aprovado' | 'Rejeitado';
+
+export interface DoctorInfo {
+  name: string;
+  specialty: string;
+  crm: string;
+  signature: string | null;
+}
 
 export interface Report {
   id: string;
@@ -8,7 +16,7 @@ export interface Report {
   status: ReportStatus;
   content: string;
   notes?: string;
-  signedBy?: string;
+  doctorInfo?: DoctorInfo | null;
   signedAt?: string;
 }
 
@@ -41,6 +49,7 @@ export type UserProfile = {
   name: string;
   email: string;
   specialty: string;
+  crm: string;
   signature: string | null;
   role: 'admin' | 'doctor';
 };

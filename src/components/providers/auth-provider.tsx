@@ -49,7 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const docSnap = await getDoc(userDocRef);
     if (docSnap.exists()) {
-      const profile = { uid: firebaseUser.uid, ...docSnap.data() } as UserProfile;
+      const profileData = docSnap.data();
+      const profile: UserProfile = {
+        uid: firebaseUser.uid,
+        name: profileData.name || '',
+        email: profileData.email || '',
+        specialty: profileData.specialty || '',
+        crm: profileData.crm || '',
+        signature: profileData.signature || null,
+        role: profileData.role || 'doctor',
+      };
 
       // Força o papel de administrador para o Dr. Jhalim Stewart
       if (profile.name === 'Dr. Jhalim Stewart') {
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: 'Dr. Admin',
       email: firebaseUser.email || 'admin@medicloud.com',
       specialty: 'Administrador do Sistema',
+      crm: '000000-XX',
       role: 'admin',
       signature: null
     } as UserProfile;

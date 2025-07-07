@@ -35,6 +35,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [specialty, setSpecialty] = useState('');
+  const [crm, setCrm] = useState('');
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,6 +56,7 @@ export default function RegisterPage() {
             name: name,
             email: email,
             specialty: specialty,
+            crm: crm,
             role: 'doctor',
             signature: null,
         });
@@ -120,18 +122,24 @@ export default function RegisterPage() {
             <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
-          <div className="space-y-2">
-            <Label>Especialidade</Label>
-            <Select onValueChange={setSpecialty} value={specialty} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione sua especialidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {specialties.map(spec => (
-                  <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>Especialidade</Label>
+              <Select onValueChange={setSpecialty} value={specialty} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specialties.map(spec => (
+                    <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="crm">CRM</Label>
+              <Input id="crm" placeholder="123456-SP" value={crm} onChange={(e) => setCrm(e.target.value)} required />
+            </div>
           </div>
 
           <div className="flex items-center justify-between flex-wrap gap-4 pt-4">
@@ -139,7 +147,7 @@ export default function RegisterPage() {
                 <ArrowLeft className="mr-1 h-4 w-4"/>
                 Voltar para o Login
               </Link>
-              <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading || !name || !email || !password || !specialty}>
+              <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading || !name || !email || !password || !specialty || !crm}>
                 {isLoading ? 'Criando conta...' : 'CADASTRAR'}
               </Button>
           </div>

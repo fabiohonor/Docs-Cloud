@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { Report, ReportStatus, UserProfile } from '@/lib/types';
+import type { DoctorInfo, Report, ReportStatus, UserProfile } from '@/lib/types';
 import {
   collection,
   query,
@@ -48,7 +48,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
-import Image from 'next/image';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -92,11 +91,11 @@ const formatKey = (key: string): string => {
     .replace(/^./, (str) => str.toUpperCase());
 };
 
-const buildReportHtml = (report: Report, doctorProfile: UserProfile | null): string => {
+const buildReportHtml = (report: Report): string => {
   if (!report) return '';
 
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
-  const signatureDataUrl = report.signedBy && doctorProfile?.signature ? doctorProfile.signature : null;
+  const signatureDataUrl = report.doctorInfo?.signature;
 
   let contentHtml = '';
   try {
@@ -150,9 +149,12 @@ const buildReportHtml = (report: Report, doctorProfile: UserProfile | null): str
         <h1 style="font-size: 24px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; line-height: 1.6; border: 1px solid #eee; padding: 15px; margin-bottom: 30px; border-radius: 6px;">
-          <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
-          <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || doctorProfile?.name || ''}</p></div>
+      <div style="font-size: 14px; line-height: 1.6; border: 1px solid #eee; padding: 15px; margin-bottom: 30px; border-radius: 6px;">
+          <p style="margin: 0; margin-bottom: 8px;"><strong>Paciente:</strong> ${report.patientName}</p>
+          ${report.doctorInfo ? `
+            <p style="margin: 0; margin-bottom: 8px;"><strong>Médico:</strong> ${report.doctorInfo.name}</p>
+            <p style="margin: 0;"><strong>CRM:</strong> ${report.doctorInfo.crm}</p>
+          ` : ''}
       </div>
 
       <main style="padding-bottom: 150px;">
@@ -160,11 +162,13 @@ const buildReportHtml = (report: Report, doctorProfile: UserProfile | null): str
       </main>
 
       <footer style="position: absolute; bottom: 40px; left: 40px; right: 40px; page-break-inside: avoid; text-align: center;">
-        ${report.signedBy ? `
+        ${report.doctorInfo ? `
         <div>
           ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
-          <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px;">${report.signedBy}</p>
-          <p style="font-size: 12px; color: #777; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+          <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px; font-weight: bold;">${report.doctorInfo.name}</p>
+          <p style="font-size: 12px; color: #777; margin: 4px 0;">${report.doctorInfo.specialty}</p>
+          <p style="font-size: 12px; color: #777; margin: 4px 0 8px 0;">CRM: ${report.doctorInfo.crm}</p>
+          <p style="font-size: 12px; color: #777; margin: 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
         </div>
         ` : ''}
       </footer>
@@ -223,7 +227,7 @@ export function ReportTable() {
     reportElement.style.left = '-9999px';
     reportElement.style.top = '0';
     
-    reportElement.innerHTML = buildReportHtml(report, userProfile); 
+    reportElement.innerHTML = buildReportHtml(report); 
 
     document.body.appendChild(reportElement);
 
@@ -276,9 +280,16 @@ export function ReportTable() {
     if (!db || !userProfile) return;
     const reportRef = doc(db, 'reports', id);
     try {
+      const doctorInfo: DoctorInfo | null = status === 'Aprovado' ? {
+        name: userProfile.name,
+        specialty: userProfile.specialty,
+        crm: userProfile.crm,
+        signature: userProfile.signature,
+      } : null;
+
       await updateDoc(reportRef, {
         status,
-        signedBy: status === 'Aprovado' ? userProfile.name : null,
+        doctorInfo,
         signedAt: status === 'Aprovado' ? new Date().toISOString() : null,
       });
       toast({
@@ -377,7 +388,7 @@ export function ReportTable() {
                       {report.status === 'Aprovado' && (
                          <DropdownMenuItem disabled>
                            <FileSignature className="mr-2 h-4 w-4" />
-                           Aprovado
+                           Aprovado por {report.doctorInfo?.name.split(' ')[0]}
                          </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
@@ -400,7 +411,7 @@ export function ReportTable() {
           <div className="flex-grow overflow-y-auto -mx-6 px-1 py-4 bg-muted/50 flex justify-center">
              <div
                 className="transform scale-[0.85] origin-top"
-                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, userProfile) : '' }}
+                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport) : '' }}
              />
           </div>
           <DialogFooter className="pt-4 border-t">

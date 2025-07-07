@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const { userProfile, loading: authLoading, updateUserProfile } = useAuth();
 
   const [inputSpecialty, setInputSpecialty] = useState('');
+  const [inputCrm, setInputCrm] = useState('');
   const [previewSignature, setPreviewSignature] = useState<string | null>(null);
 
   const settingsLoading = themeLoading || authLoading;
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (userProfile) {
       setInputSpecialty(userProfile.specialty || '');
+      setInputCrm(userProfile.crm || '');
       setPreviewSignature(userProfile.signature || null);
     }
   }, [userProfile]);
@@ -67,10 +69,10 @@ export default function SettingsPage() {
   };
 
   const handleSaveProfile = async () => {
-    await updateUserProfile({ specialty: inputSpecialty });
+    await updateUserProfile({ specialty: inputSpecialty, crm: inputCrm });
     toast({
       title: 'Perfil Salvo',
-      description: 'Sua especialidade foi atualizada.',
+      description: 'Sua especialidade e CRM foram atualizados.',
     });
   };
 
@@ -127,24 +129,32 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User /> Informações do Perfil</CardTitle>
           <CardDescription>
-            Atualize sua especialidade para que apareça no sistema.
+            Atualize sua especialidade e CRM para que apareçam no sistema.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="specialty-input" className="font-medium">Especialidade</label>
-            <div className="flex items-center gap-4">
-              <Input
-                id="specialty-input"
-                value={inputSpecialty}
-                onChange={(e) => setInputSpecialty(e.target.value)}
-                className="max-w-xs"
-                placeholder="Ex: Cardiologista"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <label htmlFor="specialty-input" className="font-medium">Especialidade</label>
+                <Input
+                    id="specialty-input"
+                    value={inputSpecialty}
+                    onChange={(e) => setInputSpecialty(e.target.value)}
+                    placeholder="Ex: Cardiologista"
+                />
+            </div>
+            <div className="space-y-2">
+                <label htmlFor="crm-input" className="font-medium">CRM</label>
+                <Input
+                    id="crm-input"
+                    value={inputCrm}
+                    onChange={(e) => setInputCrm(e.target.value)}
+                    placeholder="Ex: 123456-SP"
+                />
             </div>
           </div>
           <div>
-            <Button onClick={handleSaveProfile} disabled={inputSpecialty === userProfile.specialty}>
+            <Button onClick={handleSaveProfile} disabled={inputSpecialty === userProfile.specialty && inputCrm === userProfile.crm}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Perfil
             </Button>
