@@ -49,7 +49,7 @@ const generateReportDraftPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de IA especialista em redigir laudos médicos detalhados e técnicos em Português do Brasil.
 
-Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico. A estrutura do JSON deve ser baseada no tipo de laudo (por exemplo, 'Hemograma', 'Raio-X de Tórax'), e o conteúdo deve ser extraído das anotações do médico.
+Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico. A estrutura do JSON e seu conteúdo devem ser tecnicamente apropriados para o tipo de laudo solicitado.
 
 **Tipo de Laudo (para guiar a estrutura):** {{{reportType}}}
 **Anotações do Médico (para preencher os dados):**
@@ -58,22 +58,24 @@ Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico. A estrutura
 **REGRAS ESTRITAS:**
 1.  **ESTRUTURA JSON:** O resultado DEVE ser um único objeto JSON.
 2.  **CONTEÚDO TÉCNICO E ESTRUTURA:** Com base no 'Tipo de Laudo', crie uma estrutura JSON com seções e campos tecnicamente apropriados.
-    *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA):** Para seções que contêm uma lista de exames com valores (como "Eritrograma" ou "Leucograma"), a estrutura DEVE ser um objeto onde cada chave é o nome do exame (ex: "Hemácias"). O valor para cada exame DEVE ser outro objeto contendo as chaves \`valor_encontrado\` e \`valor_referencia\`.
-        *   **Exemplo de Estrutura Tabular para "Eritrograma":**
-            \`"eritrograma": { "Hemácias": { "valor_encontrado": "4.5 milhões/mm³", "valor_referencia": "4.2 - 5.4 milhões/mm³" }, "Hemoglobina": { "valor_encontrado": "14.0 g/dL", "valor_referencia": "12.0 - 15.5 g/dL" } }\`
-    *   **PARA SEÇÕES DE TEXTO (COMO CONCLUSÃO):** Para seções descritivas, o valor pode ser uma string simples ou um objeto com pares chave-valor.
-        *   **Exemplo para "Conclusão":** \`"conclusao": "Paciente apresenta quadro anêmico."\`
-3.  **USE AS ANOTAÇÕES:** Preencha os valores da estrutura JSON usando as informações das 'Anotações do Médico'. Se uma anotação não fornecer um valor para um campo técnico, você pode omiti-lo ou usar um valor padrão como "Não avaliado". NÃO INVENTE DADOS NUMÉRICOS.
-4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente, nome do médico, data, tipo de laudo ou qualquer outra informação de cabeçalho dentro do JSON.
-5.  **IDIOMA:** Todo o texto (chaves e valores, quando aplicável) deve ser em Português do Brasil.
-6.  **SEM FORMATAÇÃO:** Não use markdown, asteriscos ou qualquer outra formatação especial nos valores de texto.
+    *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA):** Use um objeto onde cada chave é o nome do exame. O valor deve ser um objeto com \`valor_encontrado\` e \`valor_referencia\`.
+        *   Exemplo: \`"eritrograma": { "Hemácias": { "valor_encontrado": "4.5 milhões/mm³", "valor_referencia": "4.2 - 5.4 milhões/mm³" } }\`
+    *   **PARA LAUDOS DESCRITIVOS (COMO RAIO-X, EEG):** Use seções com texto descritivo.
+        *   Exemplo: \`"achados": "Não foram observadas opacidades, consolidações ou derrames pleurais.", "impressao_diagnostica": "Exame dentro dos limites da normalidade."\`
+3.  **PREENCHIMENTO DE DADOS:** Use as 'Anotações do Médico' como fonte principal. **Se as anotações forem insuficientes, sua tarefa é gerar dados ilustrativos e plausíveis para criar um rascunho completo e realista.** O objetivo é produzir um modelo que o médico possa editar, não um formulário em branco.
+    *   **NÃO USE "Não avaliado" ou "Não informado".**
+    *   **NÃO INVENTE dados numéricos clinicamente específicos** se não houver base nas anotações. Para exames de sangue, se as anotações indicarem normalidade, gere valores dentro da faixa de referência.
+4.  **SEM METADADOS:** O JSON deve conter APENAS o corpo técnico do laudo. NÃO inclua nome do paciente, nome do médico, data, ou o tipo de laudo como um campo de texto.
+5.  **IDIOMA:** Todo o texto (chaves e valores) deve ser em Português do Brasil.
+6.  **SEM FORMATAÇÃO:** Não use markdown (como asteriscos), HTML ou qualquer formatação especial nos valores de texto.
 
 **INSTRUÇÃO DE SAÍDA CRÍTICA:**
 Sua resposta DEVE ser SOMENTE o objeto JSON, dentro de um bloco de código markdown. Não inclua texto explicativo antes ou depois.
 Exemplo:
 \`\`\`json
 {
-  "chave": "valor"
+  "secao_1": "valor da seção 1",
+  "secao_2": { "sub_chave": "sub_valor" }
 }
 \`\`\`
 `,

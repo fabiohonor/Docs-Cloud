@@ -68,6 +68,7 @@ const generateReportImageFlow = ai.defineFlow(
       - Para 'Eletrocardiograma': Ondas de ECG estilizadas em um fundo limpo.
       - Para 'Raio-X de fratura': Uma imagem estilizada de um osso com uma fratura claramente visível.
       - Para 'Ressonância Magnética do cérebro': Uma representação artística das varreduras cerebrais.
+      - Para 'Eletroencefalograma': Ondas cerebrais estilizadas (alfa, beta, etc.) em um fundo limpo.
       - Para 'Endoscopia': Uma ilustração limpa do trato gastrointestinal.
       O estilo deve ser mais um diagrama ou ilustração do que uma foto real.`,
       config: {
