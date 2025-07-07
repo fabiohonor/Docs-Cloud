@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -24,6 +25,10 @@ export function DashboardHeader() {
     router.push('/');
   };
 
+  const handleSettings = () => {
+    router.push('/dashboard/settings');
+  };
+
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-sidebar px-4 md:px-6">
       <div className="md:hidden">
@@ -48,7 +53,7 @@ export function DashboardHeader() {
               <p className="text-xs text-muted-foreground font-normal">Cardiologista</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSettings}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
             </DropdownMenuItem>

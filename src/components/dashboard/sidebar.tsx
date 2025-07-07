@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -65,9 +66,14 @@ export function DashboardSidebar() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Configurações">
-                  <Settings />
-                  <span>Configurações</span>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/dashboard/settings'}
+                  tooltip="Configurações">
+                  <Link href="/dashboard/settings">
+                    <Settings />
+                    <span>Configurações</span>
+                  </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

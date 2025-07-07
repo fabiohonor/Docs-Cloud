@@ -39,7 +39,6 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import logoImg from '@/imagens/logo.png';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +47,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+
+const SIGNATURE_STORAGE_KEY = 'doctorSignature';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -68,6 +69,10 @@ const getFormattedDate = (dateString: string) => {
 };
 
 const formatKey = (key: string): string => {
+  if (key === 'patientName') return 'Paciente';
+  if (key === 'reportType') return 'Tipo de Laudo';
+  if (key === 'date') return 'Data';
+  
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
@@ -75,30 +80,33 @@ const formatKey = (key: string): string => {
     .replace(/^./, (str) => str.toUpperCase());
 };
 
-const buildReportHtml = (report: Report): string => {
+const buildReportHtml = (report: Report, signatureDataUrl: string | null): string => {
   if (!report) return '';
 
-  const logoUrl = logoImg.src;
+  const logoUrl = '/logo.png'; 
 
   let contentHtml = '';
   try {
     const data = JSON.parse(report.content);
     
-    const formatSectionValue = (value: any): string => {
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
-        for (const key in value) {
-          list += `<li style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0;"><span>${formatKey(key)}</span> <strong>${value[key]}</strong></li>`;
+    const formatSectionValue = (value: any, key?: string): string => {
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
+            for (const subKey in value) {
+                list += `<li style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
+            }
+            list += '</ul>';
+            return list;
         }
-        list += '</ul>';
-        return list;
-      }
-      if(Array.isArray(value)) {
-          return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
-              ${value.map(item => `<li>${item}</li>`).join('')}
-           </ul>`;
-      }
-      return `<div style="font-size: 14px; color: #555; line-height: 1.6;">${String(value).replace(/\n/g, '<br />')}</div>`;
+        if (Array.isArray(value)) {
+            return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
+                ${value.map(item => `<li>${item}</li>`).join('')}
+            </ul>`;
+        }
+        if (key === 'Resultado' && String(value).includes('HCG')) {
+            return `<div style="font-size: 16px; font-weight: bold; color: #383838; text-align: center; padding: 10px; border: 1px solid #EAE0D5; border-radius: 4px; background: #F5EBE0;">${String(value)}</div>`
+        }
+        return `<div style="font-size: 14px; color: #555; line-height: 1.6;">${String(value).replace(/\n/g, '<br />')}</div>`;
     };
 
     for (const sectionKey in data) {
@@ -109,17 +117,17 @@ const buildReportHtml = (report: Report): string => {
             <h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 12px; border-bottom: 2px solid #6E5B4C; padding-bottom: 5px;">
               ${formattedKey}
             </h3>
-            ${formatSectionValue(data[sectionKey])}
+            ${formatSectionValue(data[sectionKey], formattedKey)}
           </div>
         `;
       }
     }
   } catch (e) {
-    contentHtml = `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem;">${report.content.replace(/\n/g, '<br />')}</div>`;
+    contentHtml = `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem; font-size: 14px; color: #555; line-height: 1.6;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
 
   return `
-    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 1rem;">
+    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
         <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
         <div style="text-align: right;">
@@ -127,10 +135,10 @@ const buildReportHtml = (report: Report): string => {
           <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
         </div>
       </div>
-      <div style="background-color: #F5EBE0; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px;">
-        <h1 style="font-size: 22px; font-weight: bold; color: #6E5B4C; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
+      <div style="background-color: #6E5B4C; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px; border-radius: 4px;">
+        <h1 style="font-size: 22px; font-weight: bold; color: #fff; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
       </div>
-      <div style="font-size: 13px; line-height: 1.6; border-bottom: 1px solid #EAE0D5; padding-bottom: 15px; margin-bottom: 15px;">
+      <div style="font-size: 13px; line-height: 1.6; border: 1px solid #EAE0D5; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
         <div style="display: flex; justify-content: space-between;">
           <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
           <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
@@ -141,6 +149,7 @@ const buildReportHtml = (report: Report): string => {
       </div>
       ${report.signedBy ? `
       <div style="margin-top: 80px; text-align: center; page-break-inside: avoid;">
+        ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
         <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
         <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
         <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
@@ -154,6 +163,7 @@ export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
   const [isDownloading, setIsDownloading] = React.useState<{id: string, format: 'pdf' | 'jpg'} | null>(null);
   const [viewingReport, setViewingReport] = React.useState<Report | null>(null);
+  const [signature, setSignature] = React.useState<string | null>(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -166,6 +176,12 @@ export function ReportTable() {
       });
       return;
     }
+
+    const savedSignature = localStorage.getItem(SIGNATURE_STORAGE_KEY);
+    if (savedSignature) {
+      setSignature(savedSignature);
+    }
+    
     const q = query(collection(db, 'reports'), orderBy('date', 'desc'));
     const unsubscribe = onSnapshot(
       q,
@@ -192,18 +208,19 @@ export function ReportTable() {
 
   const handleDownload = async (report: Report, format: 'pdf' | 'jpg') => {
     setIsDownloading({ id: report.id, format });
+    const signatureDataUrl = localStorage.getItem(SIGNATURE_STORAGE_KEY);
 
     const reportElement = document.createElement('div');
     reportElement.style.width = '8.5in';
     reportElement.style.position = 'absolute';
     reportElement.style.left = '-9999px';
     
-    reportElement.innerHTML = buildReportHtml(report); 
+    reportElement.innerHTML = buildReportHtml(report, signatureDataUrl); 
 
     document.body.appendChild(reportElement);
 
     try {
-        const canvas = await html2canvas(reportElement, { scale: 3, useCORS: true });
+        const canvas = await html2canvas(reportElement, { scale: 3, useCORS: true, allowTaint: true });
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
         if (format === 'jpg') {
@@ -268,28 +285,6 @@ export function ReportTable() {
         variant: 'destructive',
         title: 'Erro',
         description: 'Não foi possível atualizar o status.',
-      });
-    }
-  };
-
-  const handleSign = async (id: string) => {
-    if (!db) return;
-    const reportRef = doc(db, 'reports', id);
-    try {
-      await updateDoc(reportRef, {
-        signedBy: 'Dr. Alan Grant',
-        signedAt: new Date().toISOString(),
-      });
-      toast({
-        title: 'Laudo Assinado',
-        description: `O laudo ${id} foi assinado digitalmente.`,
-      });
-    } catch (error) {
-      console.error('Failed to sign report in Firestore', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível assinar o laudo.',
       });
     }
   };
@@ -374,7 +369,7 @@ export function ReportTable() {
                         </>
                       )}
                       {report.status === 'Aprovado' && !report.signedBy && (
-                         <DropdownMenuItem onClick={() => handleSign(report.id)}>
+                         <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Aprovado')}>
                            <FileSignature className="mr-2 h-4 w-4 text-primary" />
                            Assinar Digitalmente
                          </DropdownMenuItem>
@@ -402,9 +397,9 @@ export function ReportTable() {
               Laudo para {viewingReport?.patientName} de {getFormattedDate(viewingReport?.date || '')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto -mx-6 px-6">
+          <div className="flex-grow overflow-y-auto -mx-6 px-6 bg-gray-50">
              <div
-                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport) : '' }}
+                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
           <DialogFooter className="pt-4">
