@@ -5,3 +5,4 @@ config({ path: path.resolve(process.cwd(), '.env') });
 
 import '@/ai/flows/summarize-technical-details.ts';
 import '@/ai/flows/generate-report-draft.ts';
+import '@/ai/flows/generate-report-image.ts';

@@ -19,14 +19,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles, FileText, Loader2, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
-import { generateDraftAction, summarizeAction } from '@/app/actions';
+import { generateDraftAction, summarizeAction, submitReportAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Report, ReportStatus, DoctorInfo } from '@/lib/types';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
@@ -95,60 +92,26 @@ export default function NewReportPage() {
         return;
     }
 
-    try {
-      if (!db) {
-        throw new Error("A conexão com o banco de dados não foi estabelecida. Verifique sua configuração do Firebase no arquivo .env.");
-      }
-      
-      const authorInfo: DoctorInfo = {
-        name: userProfile.name,
-        specialty: userProfile.specialty,
-        crm: userProfile.crm,
-        signature: userProfile.signature,
-      };
-
-      const newReport: Omit<Report, 'id'> = {
-        patientId: values.patientId,
-        patientName: values.patientName,
-        reportType: values.reportType,
-        date: new Date().toISOString(),
-        status: 'Pendente' as ReportStatus,
-        content: values.draft,
-        notes: values.notes,
-        authorInfo: authorInfo,
-        approverInfo: null,
-      };
-      
-      await addDoc(collection(db, 'reports'), newReport);
-
-      toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
-      router.push('/dashboard');
-    } catch (error) {
-      console.error("Failed to save report to Firestore", error);
-      
-      let errorMessage = 'Não foi possível salvar o laudo. Tente novamente.';
-
-      if (error && typeof error === 'object' && 'code' in error) {
-        const firebaseError = error as { code: string; message: string };
-        switch (firebaseError.code) {
-          case 'permission-denied':
-            errorMessage = 'Erro de Permissão: Suas regras de segurança do Firestore não permitem a criação de laudos. Verifique as regras no console do Firebase.';
-            break;
-          case 'unavailable':
-            errorMessage = 'Serviço indisponível. Verifique sua conexão com a internet e tente novamente.';
-            break;
-          default:
-            errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
-            break;
+    const reportData = {
+        ...values,
+        authorInfo: {
+            name: userProfile.name,
+            specialty: userProfile.specialty,
+            crm: userProfile.crm,
+            signature: userProfile.signature,
         }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      toast({ variant: 'destructive', title: 'Erro ao Enviar', description: errorMessage });
-    } finally {
-        setIsSubmitting(false);
+    };
+
+    const result = await submitReportAction(reportData);
+
+    if (result.error) {
+        toast({ variant: 'destructive', title: 'Erro ao Enviar', description: result.error });
+    } else {
+        toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
+        router.push('/dashboard');
     }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -205,7 +168,7 @@ export default function NewReportPage() {
           <Card>
             <CardHeader>
               <CardTitle>Geração de Rascunho com IA</CardTitle>
-              <CardDescription>Forneça anotações e deixe a IA gerar um rascunho estruturado.</CardDescription>
+              <CardDescription>Forneça anotações e deixe a IA gerar um rascunho estruturado. Para laudos de imagem, uma ilustração será gerada no envio.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField

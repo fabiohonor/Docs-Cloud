@@ -1,10 +1,13 @@
+
 'use server';
 
 import { generateReportDraft, GenerateReportDraftInput } from '@/ai/flows/generate-report-draft';
 import { summarizeTechnicalDetails, SummarizeTechnicalDetailsInput } from '@/ai/flows/summarize-technical-details';
+import { generateReportImage } from '@/ai/flows/generate-report-image';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore';
 import { z } from 'zod';
+import type { Report } from '@/lib/types';
 
 const generateDraftSchema = z.object({
   notes: z.string(),
@@ -49,6 +52,62 @@ export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o resumo.';
       return { error: errorMessage };
+    }
+}
+
+// Esquema para o novo laudo que será salvo
+const newReportSchema = z.object({
+    patientId: z.string(),
+    patientName: z.string(),
+    reportType: z.string(),
+    notes: z.string(),
+    draft: z.string(),
+    authorInfo: z.object({
+        name: z.string(),
+        specialty: z.string(),
+        crm: z.string(),
+        signature: z.string().nullable(),
+    }),
+});
+
+export async function submitReportAction(reportData: z.infer<typeof newReportSchema>) {
+    const parsedInput = newReportSchema.safeParse(reportData);
+    if (!parsedInput.success) {
+        return { error: 'Dados de entrada para o laudo são inválidos.' };
+    }
+
+    try {
+        if (!db) throw new Error("A conexão com o banco de dados não foi estabelecida.");
+
+        // 1. Gerar a imagem ilustrativa (se aplicável)
+        const imageResult = await generateReportImage({
+            reportType: parsedInput.data.reportType,
+            notes: parsedInput.data.notes,
+        });
+
+        // 2. Construir o objeto final do laudo
+        const newReport: Omit<Report, 'id'> = {
+            patientId: parsedInput.data.patientId,
+            patientName: parsedInput.data.patientName,
+            reportType: parsedInput.data.reportType,
+            date: new Date().toISOString(),
+            status: 'Pendente',
+            content: parsedInput.data.draft,
+            notes: parsedInput.data.notes,
+            authorInfo: parsedInput.data.authorInfo,
+            approverInfo: null,
+            imageUrl: imageResult.imageUrl, // Adiciona a URL da imagem
+        };
+
+        // 3. Salvar o laudo no Firestore
+        await addDoc(collection(db, 'reports'), newReport);
+
+        return { success: true };
+
+    } catch (e) {
+        console.error("Falha ao criar o laudo:", e);
+        const errorMessage = e instanceof Error ? e.message : 'Não foi possível salvar o laudo.';
+        return { error: errorMessage };
     }
 }
 

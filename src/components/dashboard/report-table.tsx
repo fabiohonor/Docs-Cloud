@@ -179,6 +179,19 @@ const buildReportHtml = (report: Report): string => {
     contentHtml = `<div style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 14px; color: #333; line-height: 1.7;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
   
+  const imageSection = report.imageUrl
+    ? `
+    <div style="margin-top: 30px; page-break-inside: avoid;">
+      <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+        Imagens de Apoio
+      </h3>
+      <div style="text-align: center; margin-top: 15px;">
+        <img src="${report.imageUrl}" alt="Imagem do Laudo" style="max-width: 80%; height: auto; margin: auto; border-radius: 8px; border: 1px solid #ddd; padding: 5px;" />
+      </div>
+    </div>
+  `
+    : '';
+
   return `
     <div style="background-color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; padding: 40px; width: 21cm; min-height: 29.7cm; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative;">
       <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 30px;">
@@ -210,6 +223,7 @@ const buildReportHtml = (report: Report): string => {
       </div>
 
       <main style="padding-bottom: 150px;">
+        ${imageSection}
         ${contentHtml}
       </main>
 
@@ -293,10 +307,12 @@ export function ReportTable() {
           useCORS: true, 
           allowTaint: true,
           onclone: (clonedDoc) => {
-              const logo = clonedDoc.querySelector('img[alt="Logo"]');
-              if (logo) {
-                  (logo as HTMLImageElement).src = logo.src + `?t=${new Date().getTime()}`;
-              }
+              const images = clonedDoc.querySelectorAll('img');
+              images.forEach(img => {
+                  if (img.src.startsWith('data:')) return;
+                  // Adiciona um timestamp para evitar o cache do navegador para imagens externas
+                  (img as HTMLImageElement).src = img.src + `?t=${new Date().getTime()}`;
+              });
           }
       });
 
@@ -324,7 +340,7 @@ export function ReportTable() {
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo. A causa mais provável é que a imagem da logo não foi encontrada. Por favor, certifique-se de que o arquivo 'logo.png' está na pasta 'public' na raiz do seu projeto.",
+            description: "Não foi possível gerar o arquivo. A causa mais provável é que a imagem da logo ou a imagem do laudo não puderam ser carregadas. Certifique-se de que o arquivo 'logo.png' está na pasta 'public'.",
         });
     } finally {
         document.body.removeChild(reportElement);
