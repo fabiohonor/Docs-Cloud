@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const logoDataUri = 'data:image/png;base64,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';
+const logoDataUri = 'data:image/png;base64,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';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -55,33 +55,30 @@ const formatReportContent = (content: string): string => {
     const data = JSON.parse(content);
     let htmlContent = '';
 
-    // Results section
-    if (data.results) {
-      htmlContent += '<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Resultados</h4>';
-      if (data.results.hcg) {
-        htmlContent += `<p><strong>Beta-hCG Quantitativo:</strong> ${data.results.hcg.value || 'N/A'} ${data.results.hcg.units || ''} - <strong>Interpretação:</strong> ${data.results.hcg.interpretation || 'N/A'}</p>`;
+    const keyMap: Record<string, string> = {
+      achados: 'Achados',
+      conclusao: 'Conclusão',
+      observacoes: 'Observações',
+    };
+
+    let isKnownJsonFormat = false;
+    for (const key in keyMap) {
+      if (data[key]) {
+        isKnownJsonFormat = true;
+        htmlContent += `<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">${keyMap[key]}</h4>`;
+        htmlContent += `<p>${data[key].replace(/\n/g, '<br />')}</p>`;
       }
-      if (data.results.ultrassom) {
-        htmlContent += `<p><strong>Ultrassonografia:</strong> ${data.results.ultrassom.finding || 'N/A'}</p>`;
-      }
+    }
+    
+    if (isKnownJsonFormat) {
+      return htmlContent;
     }
 
-    // Additional Notes section
-    if (data.additionalNotes) {
-      htmlContent += `<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Observações Adicionais</h4>`;
-      htmlContent += `<p>${data.additionalNotes}</p>`;
-    }
-    
-    if (htmlContent) {
-        return htmlContent.replace(/\n/g, '<br />');
-    }
-    
-    // Fallback for non-JSON or empty content
+    // Fallback for any other type of JSON or non-JSON content
     return content.replace(/\n/g, '<br />');
-
+    
   } catch (e) {
-    // If it's not valid JSON, it's probably plain text from an older report.
-    // So, just return it formatted with line breaks.
+    // If it's not valid JSON, it's probably plain text.
     return content.replace(/\n/g, '<br />');
   }
 };
@@ -151,7 +148,7 @@ export function ReportTable() {
 
     reportElement.innerHTML = `
         <div style="border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; text-align: center;">
-            <img src="${logoDataUri}" alt="São Rafael Sandy Shores Hospital" style="width: 288px; height: 48px; margin: 0 auto; object-fit: contain;"/>
+            <img src="${logoDataUri}" alt="Hospital São Rafael" style="width: 288px; height: 48px; margin: 0 auto; object-fit: contain;"/>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 16px;">
             <div>
