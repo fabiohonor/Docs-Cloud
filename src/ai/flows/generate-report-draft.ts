@@ -85,7 +85,7 @@ const generateReportDraftFlow = ai.defineFlow(
     outputSchema: GenerateReportDraftOutputSchema,
   },
   async (input) => {
-    const response = await generateReportDraftPrompt.generate({input});
+    const response = await generateReportDraftPrompt(input);
     const rawText = response.text;
 
     if (!rawText) {

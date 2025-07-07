@@ -64,7 +64,7 @@ const summarizeTechnicalDetailsFlow = ai.defineFlow(
     outputSchema: SummarizeTechnicalDetailsOutputSchema,
   },
   async (input) => {
-    const response = await prompt.generate({input});
+    const response = await prompt(input);
     const rawText = response.text;
     
     if (!rawText) {
