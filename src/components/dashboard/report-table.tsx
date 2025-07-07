@@ -140,37 +140,39 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
   }
   
   return `
-    <div style="position: relative; background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; padding-bottom: 150px; margin: 0 auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
-        <img src="/logo.png" alt="Logo" style="height: 50px;" />
-        <div style="text-align: right;">
-          <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
-          <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
+    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; margin: 0 auto;">
+      <div style="position: relative; padding-bottom: 150px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
+          <img src="/logo.png" alt="Logo" style="height: 50px;" />
+          <div style="text-align: right;">
+            <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
+            <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
+          </div>
         </div>
-      </div>
-      
-      <div style="background-color: #6E5B4C; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px; border-radius: 4px;">
-        <h1 style="font-size: 22px; font-weight: bold; color: #fff; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; line-height: 1.6; border: 1px solid #EAE0D5; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
-          <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
-          <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
-      </div>
-
-      <div>
-        ${contentHtml}
-      </div>
-
-      <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; page-break-inside: avoid;">
-        ${report.signedBy ? `
-        <div style="text-align: center;">
-          ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
-          <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
-          <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
-          <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+        
+        <div style="background-color: #6E5B4C; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px; border-radius: 4px;">
+          <h1 style="font-size: 22px; font-weight: bold; color: #fff; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
         </div>
-        ` : ''}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; line-height: 1.6; border: 1px solid #EAE0D5; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+            <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
+            <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
+        </div>
+
+        <div>
+          ${contentHtml}
+        </div>
+
+        <div style="position: absolute; bottom: 40px; left: 0; right: 0; page-break-inside: avoid;">
+          ${report.signedBy ? `
+          <div style="text-align: center;">
+            ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
+            <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
+            <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
+            <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+          </div>
+          ` : ''}
+        </div>
       </div>
     </div>
   `;
@@ -273,7 +275,7 @@ export function ReportTable() {
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo. Verifique se o arquivo logo.png existe na pasta 'public'.",
+            description: "Não foi possível gerar o arquivo. A causa mais provável é que a imagem da logo não foi encontrada. Por favor, certifique-se de que o arquivo 'logo.png' está na pasta 'public' na raiz do seu projeto (e não na pasta 'src').",
         });
     } finally {
         document.body.removeChild(reportElement);
@@ -406,8 +408,9 @@ export function ReportTable() {
               Laudo para {viewingReport?.patientName} de {getFormattedDate(viewingReport?.date || '')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto -mx-6 px-6 py-4 bg-gray-50">
+          <div className="flex-grow overflow-y-auto -mx-6 px-1 py-4 bg-gray-50 flex justify-center">
              <div
+                className="scale-[0.35] sm:scale-50 md:scale-75 origin-top"
                 dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
