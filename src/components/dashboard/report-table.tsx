@@ -140,7 +140,7 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
   }
   
   return `
-    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm;">
+    <div style="position: relative; background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; padding-bottom: 150px;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
         <h2 style="font-size: 18px; margin: 0; font-weight: bold;">Hospital São Rafael</h2>
         <div style="text-align: right;">
@@ -162,9 +162,9 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
         ${contentHtml}
       </div>
 
-      <div style="position: absolute; bottom: 40px; left: 40px; right: 40px;">
+      <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; page-break-inside: avoid;">
         ${report.signedBy ? `
-        <div style="text-align: center; page-break-inside: avoid;">
+        <div style="text-align: center;">
           ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
           <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
           <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
@@ -408,7 +408,7 @@ export function ReportTable() {
           </DialogHeader>
           <div className="flex-grow overflow-y-auto -mx-6 px-2 bg-gray-50">
              <div
-                className="scale-[.48] -translate-x-1/4 -translate-y-[26%] origin-top-left"
+                className="mx-auto my-4 origin-top scale-[0.8]"
                 dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
