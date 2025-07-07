@@ -37,6 +37,7 @@ const formSchema = z.object({
 export default function NewReportPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [patientSummary, setPatientSummary] = useState('');
   const [technicalDetails, setTechnicalDetails] = useState('');
   const { toast } = useToast();
@@ -81,6 +82,7 @@ export default function NewReportPage() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
     const newReport: Omit<Report, 'id'> = {
       patientName: values.patientName,
       reportType: values.reportType,
@@ -97,7 +99,22 @@ export default function NewReportPage() {
       router.push('/dashboard');
     } catch (error) {
       console.error("Failed to save report to Firestore", error);
-      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar o laudo. Verifique sua configuração do Firebase.' });
+      let errorMessage = 'Não foi possível salvar o laudo. Verifique sua conexão e configuração do Firebase.';
+      if (error instanceof Error && 'code' in error) {
+          const firebaseError = error as { code: string; message: string };
+          if (firebaseError.code === 'permission-denied') {
+              errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore.';
+          } else if (firebaseError.code === 'unavailable') {
+              errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet.';
+          } else {
+              errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
+          }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast({ variant: 'destructive', title: 'Erro ao Enviar', description: errorMessage });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -219,9 +236,18 @@ export default function NewReportPage() {
               </DialogContent>
             </Dialog>
 
-            <Button type="submit" disabled={!form.getValues('draft')}>
-              Enviar para Aprovação
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button type="submit" disabled={!form.getValues('draft') || isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  Enviar para Aprovação
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </form>
