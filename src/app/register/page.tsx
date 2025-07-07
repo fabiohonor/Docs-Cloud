@@ -64,11 +64,17 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
+
     if (!auth || !db) {
-      toast({ variant: 'destructive', title: 'Falha na Conexão', description: 'A conexão com o Firebase falhou. Verifique sua configuração do Firebase no arquivo .env e reinicie o servidor de desenvolvimento.' });
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Configuração do Firebase',
+        description: 'A conexão com o Firebase não foi estabelecida. Verifique o console para mais detalhes (F12).',
+      });
       setIsLoading(false);
       return;
     }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
@@ -77,19 +83,40 @@ export default function RegisterPage() {
         name: values.name,
         email: values.email,
         specialty: values.specialty,
-        role: 'doctor',
         signature: null,
+        role: 'doctor',
       };
 
       await setDoc(doc(db, 'users', user.uid), newUserProfile);
+      
+      toast({
+        title: 'Conta Criada com Sucesso!',
+        description: 'Você será redirecionado para o painel.',
+      });
 
-      toast({ title: 'Sucesso!', description: 'Sua conta foi criada. Redirecionando...' });
       router.push('/dashboard');
 
     } catch (error: any) {
-        console.error("Erro detalhado no cadastro: ", error);
-        const errorMessage = error.message || 'Ocorreu um erro desconhecido durante o cadastro.';
-        toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
+      let errorMessage = 'Ocorreu um erro desconhecido.';
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = 'Este endereço de e-mail já está em uso.';
+            break;
+          case 'auth/invalid-email':
+            errorMessage = 'O endereço de e-mail fornecido é inválido.';
+            break;
+          case 'auth/weak-password':
+            errorMessage = 'A senha é muito fraca. Por favor, escolha uma senha mais segura.';
+            break;
+          case 'permission-denied':
+            errorMessage = 'Erro de Permissão: Verifique suas regras de segurança do Firestore.';
+            break;
+          default:
+            errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
+        }
+      }
+      toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
     } finally {
       setIsLoading(false);
     }
