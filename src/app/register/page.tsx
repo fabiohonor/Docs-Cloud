@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRouter, redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -87,12 +87,32 @@ export default function RegisterPage() {
       router.push('/dashboard');
 
     } catch (error: any) {
-      console.error(error);
-      let errorMessage = 'Ocorreu um erro desconhecido.';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este e-mail já está sendo usado por outra conta.';
-      }
-      toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
+        console.error("Erro detalhado no cadastro: ", error);
+        let errorMessage = 'Ocorreu um erro desconhecido. Verifique o console do navegador para mais detalhes.';
+        
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Este endereço de e-mail já está sendo usado por outra conta.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'O formato do e-mail fornecido é inválido.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'A senha é muito fraca. Por favor, use pelo menos 6 caracteres.';
+                    break;
+                case 'permission-denied':
+                    errorMessage = 'Erro de permissão ao salvar no banco de dados. A causa mais provável é que as regras de segurança do seu Firestore não permitem a criação de novos usuários. Por favor, verifique suas regras de segurança no console do Firebase.';
+                    break;
+                case 'unavailable':
+                    errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet e tente novamente.';
+                    break;
+                default:
+                    errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
+            }
+        }
+        
+        toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
     } finally {
       setIsLoading(false);
     }
