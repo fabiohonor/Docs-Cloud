@@ -62,7 +62,7 @@ export default function RegisterPage() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
     if (!auth || !db) {
@@ -120,7 +120,7 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
