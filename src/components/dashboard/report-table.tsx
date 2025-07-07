@@ -140,9 +140,9 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
   }
   
   return `
-    <div style="position: relative; background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; padding-bottom: 150px;">
+    <div style="position: relative; background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; padding-bottom: 150px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
-        <h2 style="font-size: 18px; margin: 0; font-weight: bold;">Hospital São Rafael</h2>
+        <img src="/logo.png" alt="Logo" style="height: 50px;" />
         <div style="text-align: right;">
           <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
           <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
@@ -273,7 +273,7 @@ export function ReportTable() {
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo para download. Tente novamente.",
+            description: "Não foi possível gerar o arquivo. Verifique se o arquivo logo.png existe na pasta 'public'.",
         });
     } finally {
         document.body.removeChild(reportElement);
@@ -406,9 +406,8 @@ export function ReportTable() {
               Laudo para {viewingReport?.patientName} de {getFormattedDate(viewingReport?.date || '')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto -mx-6 px-2 bg-gray-50">
+          <div className="flex-grow overflow-y-auto -mx-6 px-6 py-4 bg-gray-50">
              <div
-                className="mx-auto my-4 origin-top scale-[0.8]"
                 dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
