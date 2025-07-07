@@ -65,7 +65,7 @@ export default function RegisterPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth || !db) {
-      toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviços do Firebase não disponíveis. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
+      toast({ variant: 'destructive', title: 'Falha no Cadastro', description: 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
       setIsLoading(false);
       return;
     }

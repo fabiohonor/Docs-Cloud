@@ -47,7 +47,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth) {
-        toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'Serviço de autenticação não disponível. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
+        toast({ variant: 'destructive', title: 'Falha no Login', description: 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
         setIsLoading(false);
         return;
     }

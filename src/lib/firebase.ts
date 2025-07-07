@@ -19,11 +19,20 @@ let app: FirebaseApp | undefined;
 let db: Firestore | undefined;
 let auth: Auth | undefined;
 
+// Check if all necessary config values are present
+const isConfigComplete = 
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId;
+
 if (getApps().length > 0) {
   app = getApp();
   db = getFirestore(app);
   auth = getAuth(app);
-} else if (firebaseConfig.projectId) {
+} else if (isConfigComplete) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
