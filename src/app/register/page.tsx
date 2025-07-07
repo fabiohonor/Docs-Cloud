@@ -19,11 +19,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stethoscope, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
-import type { UserProfile } from '@/lib/types';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome é obrigatório.' }),
@@ -66,29 +66,23 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     if (!auth || !db) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de Configuração do Firebase',
-        description: 'A conexão com o Firebase não foi estabelecida. Verifique o console para mais detalhes (F12).',
-      });
-      setIsLoading(false);
-      return;
+        toast({ variant: 'destructive', title: 'Erro de Configuração', description: 'A conexão com o Firebase não foi estabelecida.' });
+        setIsLoading(false);
+        return;
     }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
 
-      const newUserProfile: Omit<UserProfile, 'uid'> = {
+      await setDoc(doc(db, 'users', user.uid), {
         name: values.name,
         email: values.email,
         specialty: values.specialty,
-        signature: null,
         role: 'doctor',
-      };
+        signature: null
+      });
 
-      await setDoc(doc(db, 'users', user.uid), newUserProfile);
-      
       toast({
         title: 'Conta Criada com Sucesso!',
         description: 'Você será redirecionado para o painel.',
@@ -97,23 +91,22 @@ export default function RegisterPage() {
       router.push('/dashboard');
 
     } catch (error: any) {
-      let errorMessage = 'Ocorreu um erro desconhecido.';
+      console.error("Erro detalhado no cadastro: ", error);
+      let errorMessage = 'Ocorreu um erro desconhecido durante o cadastro.';
+
       if (error.code) {
         switch (error.code) {
           case 'auth/email-already-in-use':
-            errorMessage = 'Este endereço de e-mail já está em uso.';
+            errorMessage = 'Este e-mail já está em uso por outra conta.';
             break;
           case 'auth/invalid-email':
-            errorMessage = 'O endereço de e-mail fornecido é inválido.';
+            errorMessage = 'O e-mail fornecido não é válido.';
             break;
           case 'auth/weak-password':
-            errorMessage = 'A senha é muito fraca. Por favor, escolha uma senha mais segura.';
-            break;
-          case 'permission-denied':
-            errorMessage = 'Erro de Permissão: Verifique suas regras de segurança do Firestore.';
+            errorMessage = 'A senha é muito fraca. Por favor, escolha uma senha mais forte.';
             break;
           default:
-            errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
+            errorMessage = `Ocorreu um erro inesperado: ${error.message}`;
         }
       }
       toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
@@ -195,7 +188,7 @@ export default function RegisterPage() {
                     Voltar para o Login
                  </Link>
                  <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading}>
-                    {isLoading ? 'Criando conta...' : 'CADASTRAR'}
+                    {isLoading ? 'Enviando...' : 'CADASTRAR'}
                  </Button>
             </div>
           </form>
