@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const logoDataUri = 'data:image/png;base64,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';
+const logoDataUri = 'data:image/png;base64,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';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -49,63 +49,64 @@ const statusStyles: Record<ReportStatus, string> = {
   Rascunho: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
-// Helper function to format JSON content into readable HTML
 const formatReportContent = (content: string): string => {
+  let data;
   try {
-    const data = JSON.parse(content);
-    let htmlContent = '';
-
-    const keyMap: Record<string, string> = {
-      achados: 'Achados',
-      conclusao: 'Conclusão',
-      observacoes: 'Observações',
-    };
-
-    let isKnownJsonFormat = false;
-    for (const key in data) {
-        // Find a matching key in a case-insensitive way
-        const mappedKey = Object.keys(keyMap).find(k => k.toLowerCase() === key.toLowerCase());
-        if (mappedKey && data[key]) {
-            isKnownJsonFormat = true;
-            const title = keyMap[mappedKey as keyof typeof keyMap];
-            htmlContent += `<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">${title}</h4>`;
-            htmlContent += `<p>${data[key].replace(/\n/g, '<br />')}</p>`;
-        }
-    }
-    
-    // Also check for the original keys in the keyMap, in case the data keys are different
-    for (const key in keyMap) {
-      if (data[key] && !Object.keys(data).find(k => k.toLowerCase() === key.toLowerCase())) {
-        isKnownJsonFormat = true;
-        htmlContent += `<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">${keyMap[key]}</h4>`;
-        htmlContent += `<p>${data[key].replace(/\n/g, '<br />')}</p>`;
-      }
-    }
-
-    if (isKnownJsonFormat) {
-      return htmlContent;
-    }
-
-    // Fallback for any other type of JSON (like a simple string in JSON) or non-JSON content
-    if (typeof data === 'string') {
-        return data.replace(/\n/g, '<br />');
-    }
-    
-    // Fallback for unexpected object format
-    let fallbackContent = '';
-    for (const key in data) {
-        fallbackContent += `<h4 style="font-size: 15px; font-weight: bold; margin-top: 15px; margin-bottom: 8px;">${key.charAt(0).toUpperCase() + key.slice(1)}</h4>`;
-        fallbackContent += `<p>${String(data[key]).replace(/\n/g, '<br />')}</p>`;
-    }
-    if (fallbackContent) return fallbackContent;
-
-
-    return content.replace(/\n/g, '<br />');
-    
+    data = JSON.parse(content);
   } catch (e) {
-    // If it's not valid JSON, it's probably plain text.
     return content.replace(/\n/g, '<br />');
   }
+
+  let htmlContent = '';
+  const keyMap: Record<string, string> = {
+    achados: 'Achados',
+    conclusao: 'Conclusão',
+    observacoes: 'Observações',
+    resultados: 'Resultados',
+    observacao: 'Observação', // Handle alternative key
+  };
+
+  const processValue = (value: any): string => {
+    if (typeof value === 'string') {
+      return `<p style="color: #333;">${value.replace(/\n/g, '<br />')}</p>`;
+    }
+    if (typeof value === 'object' && value !== null) {
+      let list = '<ul style="list-style-position: inside; padding-left: 0;">';
+      for (const key in value) {
+        list += `<li style="margin-bottom: 5px;"><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> ${value[key]}</li>`;
+      }
+      list += '</ul>';
+      return list;
+    }
+    return `<p style="color: #333;">${String(value)}</p>`;
+  };
+  
+  // Prioritize known keys
+  for (const key of Object.keys(keyMap)) {
+    // Case-insensitive search for the key in the data object
+    const dataKey = Object.keys(data).find(dKey => dKey.toLowerCase() === key);
+    if (dataKey && data[dataKey]) {
+      htmlContent += `<h3 style="font-size: 16px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">${keyMap[key]}</h3>`;
+      htmlContent += processValue(data[dataKey]);
+    }
+  }
+
+  // Handle other keys that are not in keyMap (e.g., Exame, Medico, Crm)
+   for (const rawKey in data) {
+    const lowerKey = rawKey.toLowerCase();
+    if (!Object.keys(keyMap).includes(lowerKey)) {
+        const title = rawKey.charAt(0).toUpperCase() + rawKey.slice(1);
+        htmlContent += `<h3 style="font-size: 16px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">${title}</h3>`;
+        htmlContent += processValue(data[rawKey]);
+    }
+  }
+
+  // Fallback if no content was generated
+  if (htmlContent.trim() === '') {
+      return content.replace(/\n/g, '<br />');
+  }
+
+  return htmlContent;
 };
 
 
@@ -166,36 +167,39 @@ export function ReportTable() {
     reportElement.style.width = '800px';
     reportElement.style.padding = '40px';
     reportElement.style.backgroundColor = 'white';
-    reportElement.style.color = '#000';
+    reportElement.style.color = '#111';
     reportElement.style.fontFamily = 'Arial, sans-serif';
 
     const formattedContent = formatReportContent(report.content);
 
     reportElement.innerHTML = `
-        <div style="border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; text-align: center;">
-            <img src="${logoDataUri}" alt="Hospital São Rafael" style="width: 288px; height: 48px; margin: 0 auto; object-fit: contain;"/>
+        <div style="text-align: center; margin-bottom: 30px;">
+            <img src="${logoDataUri}" alt="Hospital São Rafael" style="width: 288px; height: 48px; object-fit: contain;"/>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 16px;">
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
             <div>
-                <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
-                <p style="margin: 0;">${report.patientName}</p>
+                <h2 style="font-size: 12px; color: #555; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
+                <p style="margin: 0; font-size: 16px;">${report.patientName}</p>
             </div>
             <div style="text-align: right;">
-                <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
-                <p style="margin: 0;">${getFormattedDate(report.date)}</p>
+                <h2 style="font-size: 12px; color: #555; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
+                <p style="margin: 0; font-size: 16px;">${getFormattedDate(report.date)}</p>
             </div>
         </div>
-        <div style="margin-bottom: 25px; font-size: 16px;">
-            <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
-            <p style="margin: 0;">${report.reportType}</p>
+
+        <div style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+            <h2 style="font-size: 12px; color: #555; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
+            <p style="margin: 0; font-size: 16px;">${report.reportType}</p>
         </div>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+        
         <div>
-            <h2 style="font-size: 18px; font-weight: bold; color: #111; margin-bottom: 15px;">Conteúdo do Laudo</h2>
-            <div style="font-size: 16px; line-height: 1.6; color: #333;">${formattedContent}</div>
+            <h2 style="font-size: 20px; font-weight: bold; color: #111; margin-bottom: 20px; text-align: center;">Conteúdo do Laudo</h2>
+            <div style="font-size: 16px; line-height: 1.6;">${formattedContent}</div>
         </div>
+
         ${report.signedBy ? `
-        <div style="margin-top: 60px; text-align: center;">
+        <div style="margin-top: 80px; text-align: center;">
             <p style="font-size: 16px; margin: 0; line-height: 1;">_________________________</p>
             <p style="font-size: 16px; margin: 8px 0 0 0;">${report.signedBy}</p>
             <p style="font-size: 14px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
@@ -206,7 +210,7 @@ export function ReportTable() {
     document.body.appendChild(reportElement);
 
     try {
-        const canvas = await html2canvas(reportElement, { scale: 2 });
+        const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
         if (format === 'jpg') {
@@ -223,9 +227,10 @@ export function ReportTable() {
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
             const ratio = imgHeight / imgWidth;
-            let newImgWidth = pdfWidth - 20; // with margin
+            
+            let newImgWidth = pdfWidth - 20; // A4 width in mm with margin
             let newImgHeight = newImgWidth * ratio;
-
+            
             if (newImgHeight > pdfHeight - 20) {
               newImgHeight = pdfHeight - 20;
               newImgWidth = newImgHeight / ratio;
