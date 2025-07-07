@@ -13,14 +13,14 @@ const generateDraftSchema = z.object({
 export async function generateDraftAction(input: GenerateReportDraftInput) {
   const parsedInput = generateDraftSchema.safeParse(input);
   if (!parsedInput.success) {
-    return { error: 'Invalid input.' };
+    return { error: 'Dados de entrada inválidos.' };
   }
   try {
     const result = await generateReportDraft(parsedInput.data);
     return { draft: result.reportDraft };
   } catch (e) {
     console.error(e);
-    return { error: 'Failed to generate draft.' };
+    return { error: 'Falha ao gerar o rascunho.' };
   }
 }
 
@@ -31,7 +31,7 @@ const summarizeSchema = z.object({
 export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
     const parsedInput = summarizeSchema.safeParse(input);
     if (!parsedInput.success) {
-      return { error: 'Invalid input.' };
+      return { error: 'Dados de entrada inválidos.' };
     }
     if (!parsedInput.data.technicalDetails.trim()) {
       return { summary: '' };
@@ -42,6 +42,6 @@ export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
       return { summary: result.patientFriendlySummary };
     } catch (e) {
       console.error(e);
-      return { error: 'Failed to generate summary.' };
+      return { error: 'Falha ao gerar o resumo.' };
     }
 }

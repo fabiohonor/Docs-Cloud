@@ -4,46 +4,46 @@ export const mockReports: Report[] = [
   {
     id: 'RPT001',
     patientName: 'John Doe',
-    reportType: 'Cardiology Report',
+    reportType: 'Laudo Cardiológico',
     date: '2023-10-26',
-    status: 'Approved',
-    content: 'Patient shows healthy heart rhythm. No signs of arrhythmia. Blood pressure is normal. Recommend regular check-ups.',
+    status: 'Aprovado',
+    content: 'Paciente apresenta ritmo cardíaco saudável. Sem sinais de arritmia. Pressão arterial normal. Recomenda-se check-ups regulares.',
     signedBy: 'Dr. Emily Carter',
     signedAt: '2023-10-27T10:00:00Z'
   },
   {
     id: 'RPT002',
     patientName: 'Jane Smith',
-    reportType: 'Radiology Report - X-Ray',
+    reportType: 'Laudo de Radiologia - Raio-X',
     date: '2023-10-25',
-    status: 'Pending Approval',
-    content: 'X-ray of the left arm shows a hairline fracture in the ulna. Patient advised to wear a cast for 4-6 weeks.',
-    notes: 'x-ray left arm, hairline fracture ulna, needs cast 4-6w'
+    status: 'Pendente',
+    content: 'Raio-X do braço esquerdo mostra uma fratura fina na ulna. Paciente orientado a usar gesso por 4-6 semanas.',
+    notes: 'raio-x braço esquerdo, fratura fina ulna, gesso 4-6s'
   },
   {
     id: 'RPT003',
     patientName: 'Peter Jones',
-    reportType: 'Lab Results',
+    reportType: 'Resultados de Laboratório',
     date: '2023-10-24',
-    status: 'Draft',
+    status: 'Rascunho',
     content: '',
-    notes: 'blood test results: cholesterol high, glucose normal. advise dietary changes.'
+    notes: 'resultados exame de sangue: colesterol alto, glicose normal. aconselhar mudanças na dieta.'
   },
   {
     id: 'RPT004',
     patientName: 'Mary Williams',
-    reportType: 'Dermatology Consultation',
+    reportType: 'Consulta Dermatológica',
     date: '2023-10-22',
-    status: 'Rejected',
-    content: 'Patient presents with a mild rash on the forearm. Initial diagnosis is contact dermatitis. Prescribed hydrocortisone cream.',
+    status: 'Rejeitado',
+    content: 'Paciente apresenta uma leve erupção cutânea no antebraço. O diagnóstico inicial é dermatite de contato. Prescrito creme de hidrocortisona.',
   },
   {
     id: 'RPT005',
     patientName: 'David Brown',
-    reportType: 'Annual Physical Exam',
+    reportType: 'Exame Físico Anual',
     date: '2023-10-20',
-    status: 'Approved',
-    content: 'Patient is in good overall health. All vitals are within normal range. Vaccinations are up to date.',
+    status: 'Aprovado',
+    content: 'Paciente em bom estado de saúde geral. Todos os sinais vitais estão dentro da normalidade. Vacinas em dia.',
     signedBy: 'Dr. Ben Green',
     signedAt: '2023-10-20T14:30:00Z'
   },

@@ -25,9 +25,9 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const formSchema = z.object({
-  patientName: z.string().min(2, { message: 'Patient name is required.' }),
-  reportType: z.string().min(2, { message: 'Report type is required.' }),
-  notes: z.string().min(10, { message: 'Please provide some notes to generate a draft.' }),
+  patientName: z.string().min(2, { message: 'O nome do paciente é obrigatório.' }),
+  reportType: z.string().min(2, { message: 'O tipo de laudo é obrigatório.' }),
+  notes: z.string().min(10, { message: 'Forneça algumas anotações para gerar um rascunho.' }),
   draft: z.string(),
 });
 
@@ -60,10 +60,10 @@ export default function NewReportPage() {
     setIsGenerating(false);
 
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Error', description: result.error });
+      toast({ variant: 'destructive', title: 'Erro', description: result.error });
     } else if (result.draft) {
       form.setValue('draft', result.draft);
-      toast({ title: 'Success', description: 'Report draft generated successfully.' });
+      toast({ title: 'Sucesso', description: 'Rascunho do laudo gerado com sucesso.' });
     }
   };
 
@@ -72,7 +72,7 @@ export default function NewReportPage() {
     const result = await summarizeAction({ technicalDetails });
     setIsSummarizing(false);
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Error', description: result.error });
+      toast({ variant: 'destructive', title: 'Erro', description: result.error });
     } else if (result.summary) {
       setPatientSummary(result.summary);
     }
@@ -81,23 +81,23 @@ export default function NewReportPage() {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // In a real app, this would save to a database
     console.log('Submitting report:', values);
-    toast({ title: 'Report Submitted', description: 'The new report has been saved as a draft.' });
+    toast({ title: 'Laudo Enviado', description: 'O novo laudo foi salvo como rascunho.' });
     router.push('/dashboard');
   };
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Create New Report</h1>
-        <p className="text-muted-foreground">Use AI to assist in drafting and simplifying reports.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Criar Novo Laudo</h1>
+        <p className="text-muted-foreground">Use a IA para auxiliar na elaboração e simplificação de laudos.</p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>Report Details</CardTitle>
-              <CardDescription>Enter patient and report information.</CardDescription>
+              <CardTitle>Detalhes do Laudo</CardTitle>
+              <CardDescription>Insira as informações do paciente e do laudo.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
@@ -105,8 +105,8 @@ export default function NewReportPage() {
                 name="patientName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Patient Name</FormLabel>
-                    <FormControl><Input placeholder="e.g., John Doe" {...field} /></FormControl>
+                    <FormLabel>Nome do Paciente</FormLabel>
+                    <FormControl><Input placeholder="ex: João da Silva" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -116,8 +116,8 @@ export default function NewReportPage() {
                 name="reportType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Report Type</FormLabel>
-                    <FormControl><Input placeholder="e.g., Cardiology Report" {...field} /></FormControl>
+                    <FormLabel>Tipo de Laudo</FormLabel>
+                    <FormControl><Input placeholder="ex: Laudo Cardiológico" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -127,8 +127,8 @@ export default function NewReportPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>AI Draft Generation</CardTitle>
-              <CardDescription>Provide shorthand notes and let AI generate a structured draft.</CardDescription>
+              <CardTitle>Geração de Rascunho com IA</CardTitle>
+              <CardDescription>Forneça anotações e deixe a IA gerar um rascunho estruturado.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -136,15 +136,15 @@ export default function NewReportPage() {
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Shorthand Notes</FormLabel>
-                    <FormControl><Textarea placeholder="pt presents w/ chest pain, ECG shows normal sinus rhythm..." {...field} rows={5} /></FormControl>
+                    <FormLabel>Anotações</FormLabel>
+                    <FormControl><Textarea placeholder="paciente com dor no peito, ECG com ritmo sinusal normal..." {...field} rows={5} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <Button type="button" onClick={handleGenerateDraft} disabled={isGenerating}>
                 {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                Generate Draft with AI
+                Gerar Rascunho com IA
               </Button>
               <Separator />
               <FormField
@@ -152,8 +152,8 @@ export default function NewReportPage() {
                 name="draft"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Generated Draft</FormLabel>
-                    <FormControl><Textarea placeholder="AI-generated report content will appear here." {...field} rows={15} /></FormControl>
+                    <FormLabel>Rascunho Gerado</FormLabel>
+                    <FormControl><Textarea placeholder="O conteúdo do laudo gerado por IA aparecerá aqui." {...field} rows={15} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -166,31 +166,31 @@ export default function NewReportPage() {
               <DialogTrigger asChild>
                 <Button type="button" variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
-                  Summarize for Patient
+                  Resumir para o Paciente
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[800px]">
                 <DialogHeader>
-                  <DialogTitle>Patient-Friendly Summary</DialogTitle>
+                  <DialogTitle>Resumo para o Paciente</DialogTitle>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-4 items-start">
                   <div className="space-y-2">
-                    <Label htmlFor="technical-details">Technical Details</Label>
+                    <Label htmlFor="technical-details">Detalhes Técnicos</Label>
                     <Textarea
                       id="technical-details"
-                      placeholder="Paste or write technical text here..."
+                      placeholder="Cole ou escreva o texto técnico aqui..."
                       value={technicalDetails}
                       onChange={(e) => setTechnicalDetails(e.target.value)}
                       rows={10}
                     />
                   </div>
                    <div className="space-y-2">
-                    <Label htmlFor="patient-summary">Patient Summary</Label>
+                    <Label htmlFor="patient-summary">Resumo do Paciente</Label>
                     <Textarea
                         id="patient-summary"
                         readOnly
                         value={patientSummary}
-                        placeholder="Simplified summary will appear here."
+                        placeholder="O resumo simplificado aparecerá aqui."
                         rows={10}
                         className="bg-muted"
                       />
@@ -198,13 +198,13 @@ export default function NewReportPage() {
                 </div>
                  <Button type="button" onClick={handleSummarize} disabled={isSummarizing}>
                   {isSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  Generate Summary
+                  Gerar Resumo
                 </Button>
               </DialogContent>
             </Dialog>
 
             <Button type="submit" disabled={!form.getValues('draft')}>
-              Submit for Approval
+              Enviar para Aprovação
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>

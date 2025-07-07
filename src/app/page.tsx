@@ -20,10 +20,10 @@ import { useState } from 'react';
 
 const formSchema = z.object({
   email: z.string().email({
-    message: 'Please enter a valid email address.',
+    message: 'Por favor, insira um endereço de e-mail válido.',
   }),
   password: z.string().min(6, {
-    message: 'Password must be at least 6 characters.',
+    message: 'A senha deve ter pelo menos 6 caracteres.',
   }),
 });
 
@@ -58,7 +58,7 @@ export default function LoginPage() {
               <Stethoscope className="h-8 w-8" />
             </div>
             <CardTitle className="text-3xl font-bold">MediCloud Docs</CardTitle>
-            <CardDescription>Securely access your medical workspace</CardDescription>
+            <CardDescription>Acesse seu espaço de trabalho médico com segurança</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -68,9 +68,9 @@ export default function LoginPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Endereço de E-mail</FormLabel>
                       <FormControl>
-                        <Input placeholder="name@example.com" {...field} />
+                        <Input placeholder="nome@exemplo.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -81,7 +81,7 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>Senha</FormLabel>
                       <FormControl>
                         <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
@@ -90,7 +90,7 @@ export default function LoginPage() {
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Signing In...' : 'Sign In'}
+                  {isLoading ? 'Entrando...' : 'Entrar'}
                 </Button>
               </form>
             </Form>

@@ -25,10 +25,10 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const statusStyles: Record<ReportStatus, string> = {
-  Approved: 'bg-green-100 text-green-800 border-green-200',
-  'Pending Approval': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  Rejected: 'bg-red-100 text-red-800 border-red-200',
-  Draft: 'bg-gray-100 text-gray-800 border-gray-200',
+  Aprovado: 'bg-green-100 text-green-800 border-green-200',
+  Pendente: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  Rejeitado: 'bg-red-100 text-red-800 border-red-200',
+  Rascunho: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
 export function ReportTable({ initialReports }: { initialReports: Report[] }) {
@@ -40,7 +40,7 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
     const newFormattedDates: Record<string, string> = {};
     initialReports.forEach(report => {
       // Dates are formatted on the client to avoid hydration mismatch.
-      newFormattedDates[report.id] = new Date(report.date).toLocaleDateString();
+      newFormattedDates[report.id] = new Date(report.date).toLocaleDateString('pt-BR');
     });
     setFormattedDates(newFormattedDates);
   }, [initialReports]);
@@ -48,10 +48,10 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
   const handleStatusChange = (id: string, status: ReportStatus) => {
     setReports((prevReports) =>
       prevReports.map((report) =>
-        report.id === id ? { ...report, status, signedBy: status === 'Approved' ? 'Dr. Alan Grant' : undefined, signedAt: status === 'Approved' ? new Date().toISOString() : undefined } : report
+        report.id === id ? { ...report, status, signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : undefined, signedAt: status === 'Aprovado' ? new Date().toISOString() : undefined } : report
       )
     );
-    toast({ title: 'Status Updated', description: `Report ${id} has been ${status.toLowerCase()}.` });
+    toast({ title: 'Status Atualizado', description: `O status do laudo ${id} foi atualizado para ${status}.` });
   };
   
   const handleSign = (id: string) => {
@@ -60,7 +60,7 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
         report.id === id ? { ...report, signedBy: 'Dr. Alan Grant', signedAt: new Date().toISOString() } : report
       )
     );
-    toast({ title: 'Report Signed', description: `Report ${id} has been digitally signed.` });
+    toast({ title: 'Laudo Assinado', description: `O laudo ${id} foi assinado digitalmente.` });
   }
 
   return (
@@ -68,11 +68,11 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Patient</TableHead>
-            <TableHead>Report Type</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead>Paciente</TableHead>
+            <TableHead>Tipo de Laudo</TableHead>
+            <TableHead>Data</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -95,35 +95,35 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => alert('Viewing report ' + report.id)}>View Report</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => alert('Downloading PDF...')}>
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => alert('Visualizando laudo ' + report.id)}>Ver Laudo</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => alert('Baixando PDF...')}>
                       <Download className="mr-2 h-4 w-4"/>
-                      Download PDF
+                      Baixar PDF
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    {report.status === 'Pending Approval' && (
+                    {report.status === 'Pendente' && (
                       <>
-                        <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Approved')}>
+                        <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Aprovado')}>
                           <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                          Approve
+                          Aprovar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Rejected')}>
+                        <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Rejeitado')}>
                           <XCircle className="mr-2 h-4 w-4 text-red-600" />
-                          Reject
+                          Rejeitar
                         </DropdownMenuItem>
                       </>
                     )}
-                    {report.status === 'Approved' && !report.signedBy && (
+                    {report.status === 'Aprovado' && !report.signedBy && (
                        <DropdownMenuItem onClick={() => handleSign(report.id)}>
                          <FileSignature className="mr-2 h-4 w-4 text-primary" />
-                         Digitally Sign
+                         Assinar Digitalmente
                        </DropdownMenuItem>
                     )}
                      {report.signedBy && (
                        <DropdownMenuItem disabled>
                          <FileSignature className="mr-2 h-4 w-4" />
-                         Signed
+                         Assinado
                        </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>

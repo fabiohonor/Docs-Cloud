@@ -1,11 +1,11 @@
 'use server';
 
 /**
- * @fileOverview AI agent to generate a draft medical report from shorthand notes.
+ * @fileOverview Agente de IA para gerar um rascunho de laudo médico a partir de anotações.
  *
- * - generateReportDraft - A function that generates a draft medical report.
- * - GenerateReportDraftInput - The input type for the generateReportDraft function.
- * - GenerateReportDraftOutput - The return type for the generateReportDraft function.
+ * - generateReportDraft - Uma função que gera um rascunho de laudo médico.
+ * - GenerateReportDraftInput - O tipo de entrada para a função generateReportDraft.
+ * - GenerateReportDraftOutput - O tipo de retorno para a função generateReportDraft.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,16 +14,16 @@ import {z} from 'genkit';
 const GenerateReportDraftInputSchema = z.object({
   notes: z
     .string()
-    .describe('Shorthand notes from the doctor to generate the report.'),
-  patientName: z.string().describe('The name of the patient.'),
-  reportType: z.string().describe('The type of medical report to generate.'),
+    .describe('Anotações do médico para gerar o laudo.'),
+  patientName: z.string().describe('O nome do paciente.'),
+  reportType: z.string().describe('O tipo de laudo médico a ser gerado.'),
 });
 export type GenerateReportDraftInput = z.infer<
   typeof GenerateReportDraftInputSchema
 >;
 
 const GenerateReportDraftOutputSchema = z.object({
-  reportDraft: z.string().describe('The generated draft of the medical report.'),
+  reportDraft: z.string().describe('O rascunho gerado do laudo médico.'),
 });
 export type GenerateReportDraftOutput = z.infer<
   typeof GenerateReportDraftOutputSchema
@@ -39,16 +39,16 @@ const generateReportDraftPrompt = ai.definePrompt({
   name: 'generateReportDraftPrompt',
   input: {schema: GenerateReportDraftInputSchema},
   output: {schema: GenerateReportDraftOutputSchema},
-  prompt: `You are an AI assistant that helps doctors generate medical reports.
+  prompt: `Você é um assistente de IA que ajuda médicos a gerar laudos médicos.
 
-  Based on the shorthand notes provided, generate a draft of the medical report for the patient.
-  The report should be comprehensive and well-structured.
+  Com base nas anotações fornecidas, gere um rascunho do laudo médico para o paciente.
+  O laudo deve ser abrangente e bem estruturado.
 
-  Patient Name: {{{patientName}}}
-  Report Type: {{{reportType}}}
-  Notes: {{{notes}}}
+  Nome do Paciente: {{{patientName}}}
+  Tipo de Laudo: {{{reportType}}}
+  Anotações: {{{notes}}}
 
-  Report Draft:`,
+  Rascunho do Laudo:`,
 });
 
 const generateReportDraftFlow = ai.defineFlow(

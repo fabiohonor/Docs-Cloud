@@ -33,11 +33,11 @@ export function DashboardSidebar() {
             <SidebarMenuButton
               asChild
               isActive={pathname === '/dashboard'}
-              tooltip="Dashboard"
+              tooltip="Painel"
             >
               <Link href="/dashboard">
                 <LayoutDashboard />
-                <span>Dashboard</span>
+                <span>Painel</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -45,11 +45,11 @@ export function DashboardSidebar() {
             <SidebarMenuButton
               asChild
               isActive={pathname === '/dashboard/new-report'}
-              tooltip="New Report"
+              tooltip="Novo Laudo"
             >
               <Link href="/dashboard/new-report">
                 <FilePlus2 />
-                <span>New Report</span>
+                <span>Novo Laudo</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -59,15 +59,15 @@ export function DashboardSidebar() {
         <div className="flex flex-col gap-2">
            <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Help">
+                <SidebarMenuButton tooltip="Ajuda">
                   <LifeBuoy />
-                  <span>Help</span>
+                  <span>Ajuda</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings">
+                <SidebarMenuButton tooltip="Configurações">
                   <Settings />
-                  <span>Settings</span>
+                  <span>Configurações</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -79,7 +79,7 @@ export function DashboardSidebar() {
             </Avatar>
             <div className="flex flex-col">
               <span className="font-semibold text-sm">Dr. Alan Grant</span>
-              <span className="text-xs text-muted-foreground">Cardiologist</span>
+              <span className="text-xs text-muted-foreground">Cardiologista</span>
             </div>
           </div>
         </div>

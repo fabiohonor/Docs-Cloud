@@ -1,11 +1,10 @@
-// src/ai/flows/summarize-technical-details.ts
 'use server';
 /**
- * @fileOverview Rewrites technical medical details into patient-friendly language.
+ * @fileOverview Reescreve detalhes médicos técnicos em uma linguagem amigável para o paciente.
  *
- * - summarizeTechnicalDetails - A function that summarizes technical details for patients.
- * - SummarizeTechnicalDetailsInput - The input type for the summarizeTechnicalDetails function.
- * - SummarizeTechnicalDetailsOutput - The return type for the summarizeTechnicalDetails function.
+ * - summarizeTechnicalDetails - Uma função que resume detalhes técnicos para pacientes.
+ * - SummarizeTechnicalDetailsInput - O tipo de entrada para a função summarizeTechnicalDetails.
+ * - SummarizeTechnicalDetailsOutput - O tipo de retorno para a função summarizeTechnicalDetails.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,7 +13,7 @@ import {z} from 'genkit';
 const SummarizeTechnicalDetailsInputSchema = z.object({
   technicalDetails: z
     .string()
-    .describe('The technical medical details to summarize.'),
+    .describe('Os detalhes médicos técnicos a serem resumidos.'),
 });
 export type SummarizeTechnicalDetailsInput = z.infer<
   typeof SummarizeTechnicalDetailsInputSchema
@@ -23,7 +22,7 @@ export type SummarizeTechnicalDetailsInput = z.infer<
 const SummarizeTechnicalDetailsOutputSchema = z.object({
   patientFriendlySummary: z
     .string()
-    .describe('A patient-friendly summary of the technical details.'),
+    .describe('Um resumo dos detalhes técnicos amigável para o paciente.'),
 });
 export type SummarizeTechnicalDetailsOutput = z.infer<
   typeof SummarizeTechnicalDetailsOutputSchema
@@ -39,9 +38,9 @@ const prompt = ai.definePrompt({
   name: 'summarizeTechnicalDetailsPrompt',
   input: {schema: SummarizeTechnicalDetailsInputSchema},
   output: {schema: SummarizeTechnicalDetailsOutputSchema},
-  prompt: `You are a medical expert skilled at explaining technical medical details to patients in a way that is easy to understand.
+  prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender.
 
-  Please rewrite the following technical details in a patient-friendly way:
+  Por favor, reescreva os seguintes detalhes técnicos de uma forma amigável para o paciente:
   {{{technicalDetails}}}`,
 });
 

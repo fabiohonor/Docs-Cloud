@@ -13,13 +13,13 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Manage and create medical reports.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Painel</h1>
+          <p className="text-muted-foreground">Gerencie e crie laudos médicos.</p>
         </div>
         <Link href="/dashboard/new-report">
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            New Report
+            Novo Laudo
           </Button>
         </Link>
       </div>
