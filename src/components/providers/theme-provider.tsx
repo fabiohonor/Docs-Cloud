@@ -68,15 +68,18 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const themeToApply = previewTheme || theme;
     const root = window.document.documentElement;
-    
+
+    // Remove all possible theme classes
     themes.forEach(t => {
       root.classList.remove(`theme-${t.key}`);
     });
 
-    if (themeToApply && themeToApply !== 'blue') {
+    // Add the single, correct theme class
+    if (themeToApply) {
       root.classList.add(`theme-${themeToApply}`);
     }
   }, [theme, previewTheme]);
+
 
   const updateSetting = useCallback(async (newSettings: Partial<UserSettings>) => {
     if (!settingsDocRef) {

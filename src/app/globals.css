@@ -77,6 +77,36 @@ body {
     --sidebar-ring: 210 40% 60%;
   }
 
+  .theme-blue {
+    --background: 204 33% 95%;
+    --foreground: 215 25% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 20%;
+    --primary: 210 40% 60%;
+    --primary-foreground: 210 40% 10%;
+    --secondary: 210 30% 88%;
+    --secondary-foreground: 210 25% 25%;
+    --muted: 210 30% 88%;
+    --muted-foreground: 210 20% 45%;
+    --accent: 154 33% 37%;
+    --accent-foreground: 154 33% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 20% 84%;
+    --input: 210 20% 90%;
+    --ring: 210 40% 60%;
+    --sidebar-background: 210 30% 98%;
+    --sidebar-foreground: 215 25% 20%;
+    --sidebar-primary: 210 40% 60%;
+    --sidebar-primary-foreground: 210 40% 10%;
+    --sidebar-accent: 210 30% 90%;
+    --sidebar-accent-foreground: 215 25% 20%;
+    --sidebar-border: 210 20% 84%;
+    --sidebar-ring: 210 40% 60%;
+  }
+
   .theme-green {
     --background: 145 70% 97%;
     --foreground: 145 50% 15%;
