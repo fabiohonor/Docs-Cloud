@@ -101,33 +101,68 @@ const buildReportHtml = (report: Report): string => {
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
   const signatureDataUrl = report.approverInfo?.signature;
 
+  const formatSectionValue = (value: any): string => {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const firstChildKey = Object.keys(value)[0];
+      const firstChildValue = firstChildKey ? value[firstChildKey] : null;
+  
+      // Condição para renderizar como tabela: o primeiro item tem 'valor_encontrado' e 'valor_referencia'
+      if (
+        firstChildValue &&
+        typeof firstChildValue === 'object' &&
+        'valor_encontrado' in firstChildValue &&
+        'valor_referencia' in firstChildValue
+      ) {
+        let tableHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+            <thead>
+              <tr style="border-bottom: 2px solid hsl(var(--border));">
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Exame</th>
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Valor Encontrado</th>
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Valores de Referência</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+  
+        for (const testName in value) {
+          const testData = value[testName];
+          if (typeof testData === 'object' && testData !== null) {
+            tableHtml += `
+              <tr style="border-bottom: 1px solid hsl(var(--border));">
+                <td style="padding: 12px 8px;">${formatKey(testName)}</td>
+                <td style="padding: 12px 8px; font-weight: 500;">${testData.valor_encontrado || ''}</td>
+                <td style="padding: 12px 8px; color: hsl(var(--muted-foreground));">${testData.valor_referencia || ''}</td>
+              </tr>
+            `;
+          }
+        }
+  
+        tableHtml += '</tbody></table>';
+        return tableHtml;
+      }
+  
+      // Lógica original para renderizar como lista de chave-valor
+      let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
+      for (const subKey in value) {
+        list += `<li style="padding: 8px 12px; border-bottom: 1px solid hsl(var(--border)); display: flex; justify-content: space-between; align-items: center; border-radius: 4px;"><span style="color: hsl(var(--muted-foreground));">${formatKey(subKey)}</span> <strong style="text-align: right;">${value[subKey]}</strong></li>`;
+      }
+      list += '</ul>';
+      return list;
+    }
+  
+    if (Array.isArray(value)) {
+      return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0; font-size: 14px; color: #555; line-height: 1.6;">
+          ${value.map((item) => `<li>${item}</li>`).join('')}
+      </ul>`;
+    }
+    
+    return `<div style="font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; margin-top: 8px;">${String(value)}</div>`;
+  };
+
   let contentHtml = '';
   try {
-    // Tenta analisar o conteúdo como JSON
     const data = JSON.parse(report.content);
-    
-    // Função para formatar uma seção do JSON em HTML
-    const formatSectionValue = (value: any): string => {
-      // Se for um objeto (mas não um array), cria uma lista de chave-valor
-      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
-          for (const subKey in value) {
-              list += `<li style="padding: 6px 12px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; background-color: #fafafa;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
-          }
-          list += '</ul>';
-          return list;
-      }
-      // Se for um array, cria uma lista com marcadores
-      if (Array.isArray(value)) {
-          return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0; font-size: 14px; color: #555; line-height: 1.6;">
-              ${value.map(item => `<li>${item}</li>`).join('')}
-          </ul>`;
-      }
-      // Se for uma string ou número, exibe como um parágrafo
-      return `<div style="font-size: 14px; color: #555; line-height: 1.6; white-space: pre-wrap; margin-top: 8px;">${String(value)}</div>`;
-    };
-
-    // Itera sobre as chaves do JSON para criar as seções do laudo
     for (const sectionKey in data) {
       if (Object.prototype.hasOwnProperty.call(data, sectionKey)) {
         contentHtml += `
@@ -141,7 +176,6 @@ const buildReportHtml = (report: Report): string => {
       }
     }
   } catch (e) {
-    // Se não for JSON (laudo antigo ou editado), renderiza como texto simples
     contentHtml = `<div style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 14px; color: #333; line-height: 1.7;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
   

@@ -57,9 +57,12 @@ Sua tarefa é gerar um objeto JSON estruturado para o corpo de um laudo médico,
 
 **REGRAS ESTRITAS:**
 1.  **ESTRUTURA JSON:** O resultado DEVE ser um único objeto JSON retornado no campo 'reportData'.
-2.  **CONTEÚDO TÉCNICO:** Com base no 'Tipo de Laudo', crie uma estrutura JSON com seções e campos tecnicamente apropriados.
-    *   **Exemplo para "Hemograma Completo":** O JSON deve ter chaves principais como "eritrograma", "leucograma", e "plaquetas". Cada chave deve conter um objeto com os respectivos exames e valores (ex: "hemoglobina", "leucocitos_totais", "observacoes").
-    *   **Exemplo para "Ecocardiograma":** O JSON pode ter chaves como "analise_quantitativa", "interpretacao_clinica", e "conclusao".
+2.  **CONTEÚDO TÉCNICO E ESTRUTURA:** Com base no 'Tipo de Laudo', crie uma estrutura JSON com seções e campos tecnicamente apropriados.
+    *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA):** Para seções que contêm uma lista de exames com valores (como "Eritrograma" ou "Leucograma"), a estrutura DEVE ser um objeto onde cada chave é o nome do exame (ex: "Hemácias"). O valor para cada exame DEVE ser outro objeto contendo as chaves \`valor_encontrado\` e \`valor_referencia\`.
+        *   **Exemplo de Estrutura Tabular para "Eritrograma":**
+            \`"eritrograma": { "Hemácias": { "valor_encontrado": "4.5 milhões/mm³", "valor_referencia": "4.2 - 5.4 milhões/mm³" }, "Hemoglobina": { "valor_encontrado": "14.0 g/dL", "valor_referencia": "12.0 - 15.5 g/dL" } }\`
+    *   **PARA SEÇÕES DE TEXTO (COMO CONCLUSÃO):** Para seções descritivas, o valor pode ser uma string simples ou um objeto com pares chave-valor.
+        *   **Exemplo para "Conclusão":** \`"conclusao": "Paciente apresenta quadro anêmico."\`
 3.  **USE AS ANOTAÇÕES:** Preencha os valores da estrutura JSON usando as informações das 'Anotações do Médico'. Se uma anotação não fornecer um valor para um campo técnico, você pode omiti-lo ou usar um valor padrão como "Não avaliado". NÃO INVENTE DADOS NUMÉRICOS.
 4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente, nome do médico, data ou qualquer outra informação de cabeçalho dentro do JSON.
 5.  **IDIOMA:** Todo o texto (chaves e valores, quando aplicável) deve ser em Português do Brasil.
