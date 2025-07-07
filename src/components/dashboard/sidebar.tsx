@@ -16,9 +16,22 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LayoutDashboard, FilePlus2, LifeBuoy, Settings } from 'lucide-react';
 import { Logo } from '@/components/icons';
+import { useEffect, useState } from 'react';
+
+const SPECIALTY_STORAGE_KEY = 'doctorSpecialty';
+
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const [specialty, setSpecialty] = useState('Cardiologista');
+
+  useEffect(() => {
+    const savedSpecialty = localStorage.getItem(SPECIALTY_STORAGE_KEY);
+    if (savedSpecialty) {
+      setSpecialty(savedSpecialty);
+    }
+  }, []);
+
 
   return (
     <Sidebar>
@@ -85,7 +98,7 @@ export function DashboardSidebar() {
             </Avatar>
             <div className="flex flex-col">
               <span className="font-semibold text-sm">Dr. Alan Grant</span>
-              <span className="text-xs text-muted-foreground">Cardiologista</span>
+              <span className="text-xs text-muted-foreground">{specialty}</span>
             </div>
           </div>
         </div>

@@ -27,7 +27,6 @@ body {
     --border: 210 20% 84%;
     --input: 210 20% 90%;
     --ring: 210 40% 60%;
-    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -75,6 +74,78 @@ body {
     --sidebar-accent-foreground: 210 30% 95%;
     --sidebar-border: 215 25% 25%;
     --sidebar-ring: 210 40% 60%;
+  }
+
+  .theme-green {
+    --primary: 145 63% 46%;
+    --primary-foreground: 145 63% 96%;
+    --ring: 145 63% 46%;
+    --sidebar-primary: 145 63% 46%;
+    --sidebar-primary-foreground: 145 63% 96%;
+    --sidebar-ring: 145 63% 46%;
+  }
+
+  .theme-purple {
+    --primary: 262 88% 65%;
+    --primary-foreground: 262 88% 97%;
+    --ring: 262 88% 65%;
+    --sidebar-primary: 262 88% 65%;
+    --sidebar-primary-foreground: 262 88% 97%;
+    --sidebar-ring: 262 88% 65%;
+  }
+
+  .theme-orange {
+    --primary: 25 95% 53%;
+    --primary-foreground: 25 95% 97%;
+    --ring: 25 95% 53%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 25 95% 97%;
+    --sidebar-ring: 25 95% 53%;
+  }
+
+  .theme-pink {
+    --primary: 327 82% 60%;
+    --primary-foreground: 327 82% 97%;
+    --ring: 327 82% 60%;
+    --sidebar-primary: 327 82% 60%;
+    --sidebar-primary-foreground: 327 82% 97%;
+    --sidebar-ring: 327 82% 60%;
+  }
+
+  .theme-cyan {
+    --primary: 187 94% 43%;
+    --primary-foreground: 187 94% 95%;
+    --ring: 187 94% 43%;
+    --sidebar-primary: 187 94% 43%;
+    --sidebar-primary-foreground: 187 94% 95%;
+    --sidebar-ring: 187 94% 43%;
+  }
+
+  .theme-brown {
+    --primary: 30 20% 55%;
+    --primary-foreground: 30 20% 98%;
+    --ring: 30 20% 55%;
+    --sidebar-primary: 30 20% 55%;
+    --sidebar-primary-foreground: 30 20% 98%;
+    --sidebar-ring: 30 20% 55%;
+  }
+
+  .theme-red {
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 84% 97%;
+    --ring: 0 84% 60%;
+    --sidebar-primary: 0 84% 60%;
+    --sidebar-primary-foreground: 0 84% 97%;
+    --sidebar-ring: 0 84% 60%;
+  }
+
+  .theme-indigo {
+    --primary: 239 84% 67%;
+    --primary-foreground: 239 84% 97%;
+    --ring: 239 84% 67%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 239 84% 97%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 

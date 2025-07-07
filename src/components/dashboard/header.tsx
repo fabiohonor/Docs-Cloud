@@ -16,9 +16,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+const SPECIALTY_STORAGE_KEY = 'doctorSpecialty';
 
 export function DashboardHeader() {
   const router = useRouter();
+  const [specialty, setSpecialty] = useState('Cardiologista');
+
+  useEffect(() => {
+    const savedSpecialty = localStorage.getItem(SPECIALTY_STORAGE_KEY);
+    if (savedSpecialty) {
+      setSpecialty(savedSpecialty);
+    }
+  }, []);
 
   const handleLogout = () => {
     // In a real app, this would clear the session/token
@@ -50,7 +61,7 @@ export function DashboardHeader() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <p>Dr. Alan Grant</p>
-              <p className="text-xs text-muted-foreground font-normal">Cardiologista</p>
+              <p className="text-xs text-muted-foreground font-normal">{specialty}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSettings}>
