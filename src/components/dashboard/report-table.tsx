@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -26,12 +27,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, CheckCircle, XCircle, FileSignature, Download } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, XCircle, FileSignature, Download, FileText, ImageIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -42,6 +49,7 @@ const statusStyles: Record<ReportStatus, string> = {
 
 export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
+  const [isDownloading, setIsDownloading] = React.useState<{id: string, format: 'pdf' | 'jpg'} | null>(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -84,6 +92,97 @@ export function ReportTable() {
       return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     } catch {
       return 'Data Inválida';
+    }
+  };
+
+  const handleDownload = async (report: Report, format: 'pdf' | 'jpg') => {
+    setIsDownloading({ id: report.id, format });
+
+    const reportElement = document.createElement('div');
+    reportElement.style.position = 'absolute';
+    reportElement.style.left = '-9999px';
+    reportElement.style.width = '800px';
+    reportElement.style.padding = '40px';
+    reportElement.style.backgroundColor = 'white';
+    reportElement.style.color = '#000';
+    reportElement.style.fontFamily = 'Arial, sans-serif';
+    reportElement.innerHTML = `
+        <div style="border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; text-align: center;">
+            <h1 style="font-size: 28px; font-weight: bold; margin: 0;">MediCloud Docs</h1>
+            <p style="font-size: 18px; color: #555; margin: 5px 0 0 0;">Laudo Médico</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 16px;">
+            <div>
+                <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
+                <p style="margin: 0;">${report.patientName}</p>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
+                <p style="margin: 0;">${getFormattedDate(report.date)}</p>
+            </div>
+        </div>
+        <div style="margin-bottom: 25px; font-size: 16px;">
+            <h2 style="font-size: 14px; color: #333; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
+            <p style="margin: 0;">${report.reportType}</p>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+        <div>
+            <h2 style="font-size: 18px; font-weight: bold; color: #111; margin-bottom: 15px;">Conteúdo do Laudo</h2>
+            <div style="font-size: 16px; line-height: 1.6; white-space: pre-wrap; color: #333;">${report.content.replace(/\n/g, '<br />')}</div>
+        </div>
+        ${report.signedBy ? `
+        <div style="margin-top: 60px; text-align: center;">
+            <p style="font-size: 16px; margin: 0; line-height: 1;">_________________________</p>
+            <p style="font-size: 16px; margin: 8px 0 0 0;">${report.signedBy}</p>
+            <p style="font-size: 14px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+        </div>
+        ` : ''}
+    `;
+
+    document.body.appendChild(reportElement);
+
+    try {
+        const canvas = await html2canvas(reportElement, { scale: 2 });
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+        if (format === 'jpg') {
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `laudo-${report.id}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else if (format === 'pdf') {
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = imgHeight / imgWidth;
+            let newImgWidth = pdfWidth - 20; // with margin
+            let newImgHeight = newImgWidth * ratio;
+
+            if (newImgHeight > pdfHeight - 20) {
+              newImgHeight = pdfHeight - 20;
+              newImgWidth = newImgHeight / ratio;
+            }
+
+            const x = (pdfWidth - newImgWidth) / 2;
+            const y = 10;
+
+            pdf.addImage(imgData, 'JPEG', x, y, newImgWidth, newImgHeight);
+            pdf.save(`laudo-${report.id}.pdf`);
+        }
+    } catch (error) {
+        console.error("Erro ao gerar o arquivo:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro no Download",
+            description: "Não foi possível gerar o arquivo para download.",
+        });
+    } finally {
+        document.body.removeChild(reportElement);
+        setIsDownloading(null);
     }
   };
 
@@ -166,10 +265,34 @@ export function ReportTable() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => alert('Visualizando laudo ' + report.id)}>Ver Laudo</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => alert('Baixando PDF...')}>
-                      <Download className="mr-2 h-4 w-4"/>
-                      Baixar PDF
-                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger disabled={!!isDownloading}>
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Baixar Laudo</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem onClick={() => handleDownload(report, 'pdf')} disabled={!!isDownloading}>
+                            {isDownloading?.id === report.id && isDownloading?.format === 'pdf' ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileText className="mr-2 h-4 w-4" />
+                            )}
+                            <span>PDF</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDownload(report, 'jpg')} disabled={!!isDownloading}>
+                            {isDownloading?.id === report.id && isDownloading?.format === 'jpg' ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <ImageIcon className="mr-2 h-4 w-4" />
+                            )}
+                            <span>JPG</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+
                     <DropdownMenuSeparator />
                     {report.status === 'Pendente' && (
                       <>
