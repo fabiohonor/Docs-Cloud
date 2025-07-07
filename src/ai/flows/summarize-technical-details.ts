@@ -38,11 +38,8 @@ export async function summarizeTechnicalDetails(
 const prompt = ai.definePrompt({
   name: 'summarizeTechnicalDetailsPrompt',
   input: {schema: SummarizeTechnicalDetailsInputSchema},
-  output: {schema: SummarizeTechnicalDetailsOutputSchema},
+  output: {format: 'json', schema: SummarizeTechnicalDetailsOutputSchema},
   model: 'googleai/gemini-1.5-flash-latest',
-  config: {
-    response_mime_type: 'application/json',
-  },
   prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender, em Português do Brasil.
 
   Por favor, reescreva os seguintes detalhes técnicos em uma linguagem simples e clara, em Português do Brasil (pt-BR), e retorne o resultado no formato JSON solicitado.
