@@ -66,17 +66,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
   
-  // Apply theme to the document body
+  // Apply theme to the root element
   useEffect(() => {
-    const body = document.body;
+    const root = window.document.documentElement;
     // Remove all possible theme classes
     themes.forEach(t => {
-      body.classList.remove(`theme-${t.key}`);
+      root.classList.remove(`theme-${t.key}`);
     });
 
     // Add the new theme class if it's not the default
     if (theme !== 'blue') {
-      body.classList.add(`theme-${theme}`);
+      root.classList.add(`theme-${theme}`);
     }
   }, [theme]);
 
