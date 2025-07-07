@@ -59,70 +59,41 @@ const getFormattedDate = (dateString: string) => {
 };
 
 const formatReportContent = (content: string): string => {
-  let parsedData: any;
-
+  let data;
   try {
-    parsedData = JSON.parse(content);
+    data = JSON.parse(content);
   } catch (e) {
-    return `<div style="white-space: pre-wrap;">${content}</div>`;
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
   }
 
-  if (parsedData && typeof parsedData === 'object' && parsedData.reportDraft) {
-    let draft = parsedData.reportDraft;
-    if (typeof draft === 'string') {
-      try {
-        parsedData = JSON.parse(draft);
-      } catch (e) {
-        return `<div style="white-space: pre-wrap;">${draft}</div>`;
-      }
-    } else {
-      parsedData = draft;
+  if (data && typeof data === 'object' && data.reportDraft) {
+    try {
+      data = JSON.parse(data.reportDraft);
+    } catch (e) {
+      data = { "Laudo": data.reportDraft };
     }
   }
 
-  if (typeof parsedData !== 'object' || parsedData === null) {
-    return `<div style="white-space: pre-wrap;">${content}</div>`;
+  if (typeof data !== 'object' || data === null) {
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
   }
-
-  let htmlContent = '';
 
   const formatKey = (key: string): string => {
-    const lowerKey = key.toLowerCase().replace(/_/g, '').replace(/ /g, '');
-    const keyMap: Record<string, string> = {
-      paciente: 'Paciente',
-      tipolaudo: 'Tipo de Laudo',
-      data: 'Data',
-      exame: 'Exame',
-      medico: 'Médico',
-      crm: 'CRM',
-      achados: 'Achados',
-      conclusao: 'Conclusão',
-      observacoes: 'Observações',
-      observacao: 'Observação',
-      resultados: 'Resultados',
-      reportdraft: 'Rascunho do Laudo',
-      descrição: 'Descrição',
-      descricao: 'Descrição',
-      description: 'Descrição',
-      detalhes: 'Detalhes',
-      details: 'Detalhes',
-      informaçõesdopaciente: 'Informações do Paciente',
-      identificação: 'Identificação',
-      impressãodiagnóstica: 'Impressão Diagnóstica',
-      recomendações: 'Recomendações',
-    };
-    return keyMap[lowerKey] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-  }
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/_/g, ' ')
+      .replace(/^./, (str) => str.toUpperCase());
+  };
 
   const processValue = (value: any): string => {
     if (value === null || value === undefined) return '';
     if (Array.isArray(value)) {
-        return `<ul style="list-style-type: disc; padding-left: 20px; margin: 0;">${value.map(item => `<li style="margin-bottom: 5px;">${processValue(item)}</li>`).join('')}</ul>`;
+      return `<ul style="list-style-type: none; padding-left: 0; margin: 0;">${value.map(item => `<li style="margin-bottom: 5px;">- ${processValue(item)}</li>`).join('')}</ul>`;
     }
     if (typeof value === 'object') {
       let objectHtml = '<div style="padding-left: 15px;">';
       for (const key in value) {
-        objectHtml += `<p style="margin: 0 0 5px 0;"><strong>${formatKey(key)}:</strong> ${processValue(value[key])}</p>`;
+        objectHtml += `<div style="margin: 5px 0;"><strong style="display: block; font-weight: bold;">${formatKey(key)}:</strong> ${processValue(value[key])}</div>`;
       }
       objectHtml += '</div>';
       return objectHtml;
@@ -130,22 +101,23 @@ const formatReportContent = (content: string): string => {
     return String(value).replace(/\n/g, '<br />');
   };
 
-  for (const key in parsedData) {
-    if (Object.prototype.hasOwnProperty.call(parsedData, key)) {
-        const title = formatKey(key);
-        const value = parsedData[key];
-        if (value && (typeof value !== 'string' || value.trim() !== '')) {
-           htmlContent += `
-            <div style="margin-top: 20px;">
-              <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 4px;">${title}</h3>
-              <div style="font-size: 14px; color: #555; line-height: 1.6;">${processValue(value)}</div>
-            </div>
-          `;
-        }
+  let htmlContent = '';
+  for (const key in data) {
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      const title = formatKey(key);
+      const value = data[key];
+      if (value && (typeof value !== 'string' || value.trim() !== '')) {
+         htmlContent += `
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${title}</h3>
+            <div style="font-size: 14px; color: #555; line-height: 1.6;">${processValue(value)}</div>
+          </div>
+        `;
+      }
     }
   }
-  
-  return htmlContent || `<div style="white-space: pre-wrap;">${content}</div>`;
+
+  return htmlContent || `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
 };
 
 
@@ -203,27 +175,26 @@ export function ReportTable() {
     const formattedContent = formatReportContent(report.content);
 
     reportElement.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid #eee;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid #eee;">
             <img src="/logo.png" alt="Hospital São Rafael Logo" style="height: 50px;" />
             <div style="text-align: right;">
-                <h1 style="font-size: 22px; font-weight: bold; color: #111; margin: 0;">Laudo Médico</h1>
+                <h1 style="font-size: 24px; font-weight: bold; color: #111; margin: 0;">Laudo Médico</h1>
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; padding-top: 20px; font-size: 12px; color: #555;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-top: 20px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 20px;">
             <div>
-                <h2 style="font-size: 11px; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
+                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
                 <p style="margin: 0;">${report.patientName}</p>
             </div>
             <div style="text-align: right;">
-                <h2 style="font-size: 11px; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
+                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
                 <p style="margin: 0;">${getFormattedDate(report.date)}</p>
             </div>
-        </div>
-
-        <div style="margin-top: 20px; font-size: 12px; color: #555;">
-            <h2 style="font-size: 11px; margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
-            <p style="margin: 0;">${report.reportType}</p>
+             <div>
+                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
+                <p style="margin: 0;">${report.reportType}</p>
+            </div>
         </div>
         
         <div style="margin-top: 30px;">
@@ -261,15 +232,16 @@ export function ReportTable() {
             let heightLeft = pdfHeight;
             let position = 0;
             const pageMargin = 10;
+            const pageHeight = pdf.internal.pageSize.getHeight();
 
             pdf.addImage(imgData, 'JPEG', pageMargin, position, pdfWidth - (pageMargin * 2), pdfHeight);
-            heightLeft -= pdf.internal.pageSize.getHeight();
+            heightLeft -= pageHeight;
 
-            while (heightLeft >= 0) {
-              position = heightLeft - pdfHeight;
+            while (heightLeft > 0) {
+              position -= pageHeight;
               pdf.addPage();
               pdf.addImage(imgData, 'JPEG', pageMargin, position, pdfWidth - (pageMargin * 2), pdfHeight);
-              heightLeft -= pdf.internal.pageSize.getHeight();
+              heightLeft -= pageHeight;
             }
             
             pdf.save(`laudo-${report.id}.pdf`);
@@ -279,7 +251,7 @@ export function ReportTable() {
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo para download. Verifique se o logo está na pasta /public.",
+            description: "Não foi possível gerar o arquivo para download. Verifique se o logo.png está na pasta /public.",
         });
     } finally {
         document.body.removeChild(reportElement);
