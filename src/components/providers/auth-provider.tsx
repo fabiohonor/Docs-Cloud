@@ -49,7 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const userDocRef = doc(db, 'users', firebaseUser.uid);
     const docSnap = await getDoc(userDocRef);
     if (docSnap.exists()) {
-      return { uid: firebaseUser.uid, ...docSnap.data() } as UserProfile;
+      const profile = { uid: firebaseUser.uid, ...docSnap.data() } as UserProfile;
+
+      // Força o papel de administrador para o Dr. Jhalim Stewart
+      if (profile.name === 'Dr. Jhalim Stewart') {
+        profile.role = 'admin';
+        profile.specialty = 'Administrador do Sistema';
+      }
+      
+      return profile;
     }
     // Admin fallback - if user is authenticated but has no profile, assume they are the admin.
     // In a real app, you would have a more secure way to identify admins.
