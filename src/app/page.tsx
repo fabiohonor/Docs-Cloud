@@ -64,6 +64,9 @@ export default function LoginPage() {
             case 'auth/invalid-credential':
                 errorMessage = 'E-mail ou senha inválidos. Por favor, tente novamente.';
                 break;
+            case 'auth/configuration-not-found':
+                errorMessage = 'Configuração do Firebase não encontrada. Verifique suas variáveis de ambiente NEXT_PUBLIC_FIREBASE_ e reinicie o servidor.';
+                break;
             default:
                 errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
         }

@@ -80,6 +80,9 @@ export default function RegisterPage() {
                 case 'auth/weak-password':
                     errorMessage = 'A senha é muito fraca. Tente uma senha mais forte.';
                     break;
+                case 'auth/configuration-not-found':
+                    errorMessage = 'Configuração do Firebase não encontrada. Verifique suas variáveis de ambiente NEXT_PUBLIC_FIREBASE_ e reinicie o servidor.';
+                    break;
                 default:
                     errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
             }
