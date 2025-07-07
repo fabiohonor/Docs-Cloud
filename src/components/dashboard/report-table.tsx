@@ -62,77 +62,103 @@ const getFormattedDate = (dateString: string) => {
 const formatReportContent = (content: string): string => {
   let data;
   try {
+    // First, try to parse the whole content as JSON
     data = JSON.parse(content);
-  } catch (e) {
-    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
-  }
 
-  if (data && typeof data === 'object' && data.reportDraft) {
-    try {
-      data = JSON.parse(data.reportDraft);
-    } catch (e) {
-      data = { "Laudo": data.reportDraft };
+    // If there's a reportDraft property, it might contain stringified JSON itself
+    if (data && typeof data === 'object' && data.reportDraft) {
+      try {
+        data = JSON.parse(data.reportDraft);
+      } catch (e) {
+        // If parsing reportDraft fails, it's probably just a string.
+        // We'll wrap it in a generic structure to be handled by the renderer.
+        data = { "Laudo": data.reportDraft };
+      }
     }
+  } catch (e) {
+    // If the content is not JSON, return it as pre-formatted text
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 14px; color: #333;">${content.replace(/\n/g, '<br />')}</div>`;
   }
 
+  // At this point, `data` should be a valid JavaScript object.
   if (typeof data !== 'object' || data === null) {
-    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 14px; color: #333;">${content.replace(/\n/g, '<br />')}</div>`;
   }
+
+  // Icon for "Interpretação Clínica"
+  const interpretationIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A67B5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle; margin-right: 8px;"><path d="m13.4 2.6 5.1 5.1"/><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.5L14 4Z"/><path d="M8 18h1"/><path d="M12.5 14.5a2.5 2.5 0 0 1 5 0V18"/><path d="M10 18a2.5 2.5 0 0 0 5 0V18"/></svg>`;
 
   const formatKey = (key: string): string => {
     return key
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/_/g, ' ')
+      .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
+      .replace(/_/g, ' ')       // Replace underscores with spaces
       .trim()
-      .replace(/^./, (str) => str.toUpperCase());
+      .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
   };
-
-  const buildHtml = (obj: any, isRoot = true): string => {
-    let html = isRoot ? '' : '<div style="padding-left: 20px; margin-top: 5px;">';
+  
+  const buildHtml = (obj: any): string => {
+    let html = '';
 
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key];
         const formattedKey = formatKey(key);
 
+        html += `<div style="margin-top: 24px;">`;
+        
+        // Use icon for specific key
+        if (key.toLowerCase().includes('interpretacao') || key.toLowerCase().includes('interpretation')) {
+           html += `<h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 12px; display: flex; align-items: center;">${interpretationIcon}${formattedKey}</h3>`;
+        } else {
+           html += `<h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 12px;">${formattedKey}</h3>`;
+        }
+
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          if (isRoot) {
-             html += `<div style="margin-top: 20px;">
-                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
-                        ${buildHtml(value, false)}
-                      </div>`;
-          } else {
-             html += `<div>
-                        <strong style="font-weight: bold;">${formattedKey}:</strong>
-                        ${buildHtml(value, false)}
-                      </div>`;
+          // Nested object - render key-value pairs
+          let innerHtml = '<div style="font-size: 14px; color: #555; line-height: 1.6;">';
+          for(const innerKey in value) {
+              innerHtml += `<p style="margin: 0 0 8px 0;"><strong style="color: #383838;">${formatKey(innerKey)}:</strong> ${value[innerKey]}</p>`
           }
+          innerHtml += '</div>';
+          html += innerHtml;
+
+        } else if (Array.isArray(value) && value.every(item => typeof item === 'object' && item !== null)) {
+          // It's an array of objects, let's try to make a table
+          const headers = Object.keys(value[0]);
+          html += `<table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                      <thead>
+                        <tr>
+                          ${headers.map(h => `<th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2; color: #383838;">${formatKey(h)}</th>`).join('')}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${value.map(row => `
+                          <tr>
+                            ${headers.map(h => `<td style="border: 1px solid #ddd; padding: 8px; color: #555;">${row[h]}</td>`).join('')}
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                   </table>`;
         } else if (Array.isArray(value)) {
-            html += `<div style="margin-top: 20px;">
-                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
-                        <ul style="list-style-type: none; padding-left: 0; margin: 0;">${value.map(item => `<li style="margin-bottom: 5px;">- ${typeof item === 'object' ? buildHtml(item, false) : String(item)}</li>`).join('')}</ul>
-                     </div>`
-        }
-        else {
+            // It's a simple array
+            html += `<ul style="list-style-type: none; padding-left: 0; margin: 0; font-size: 14px; color: #555; line-height: 1.6;">
+                        ${value.map(item => `<li style="margin-bottom: 5px;">- ${item}</li>`).join('')}
+                     </ul>`;
+        } else {
+          // Simple key-value pair
           const displayValue = String(value).replace(/\n/g, '<br />');
-           if (isRoot) {
-             html += `<div style="margin-top: 20px;">
-                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
-                        <div style="font-size: 14px; color: #555; line-height: 1.6;">${displayValue}</div>
-                      </div>`;
-           } else {
-              html += `<div style="margin-bottom: 5px;"><strong style="font-weight: bold;">${formattedKey}:</strong> ${displayValue}</div>`;
-           }
+          html += `<div style="font-size: 14px; color: #555; line-height: 1.6;">${displayValue}</div>`;
         }
+        
+        html += `</div>`;
       }
     }
-    html += isRoot ? '' : '</div>';
     return html;
   };
-
-  const finalHtml = buildHtml(data, true);
-  return finalHtml || `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
+  
+  return buildHtml(data);
 };
+
 
 export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
@@ -177,57 +203,63 @@ export function ReportTable() {
     setIsDownloading({ id: report.id, format });
 
     const reportElement = document.createElement('div');
+    // Set a defined size for consistent rendering
+    reportElement.style.width = '8.5in'; // Standard US Letter width
     reportElement.style.position = 'absolute';
-    reportElement.style.left = '-9999px';
-    reportElement.style.width = '800px';
-    reportElement.style.padding = '40px';
-    reportElement.style.backgroundColor = 'white';
-    reportElement.style.color = '#111';
-    reportElement.style.fontFamily = 'Arial, sans-serif';
-
+    reportElement.style.left = '-9999px'; // Render off-screen
+    reportElement.style.backgroundColor = '#fff';
+    reportElement.style.fontFamily = "'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif";
+    reportElement.style.color = '#383838';
+    
     const formattedContent = formatReportContent(report.content);
     const logoUrl = logoImg.src;
 
     reportElement.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-            <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
-            <div style="text-align: right;">
-                <h1 style="font-size: 24px; font-weight: bold; color: #111; margin: 0;">Laudo Médico</h1>
-            </div>
+      <div style="padding: 0.75in;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 80px; margin-bottom: 10px;" />
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-top: 20px; font-size: 12px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <div>
-                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Paciente</h2>
-                <p style="margin: 0;">${report.patientName}</p>
-            </div>
-            <div style="text-align: right;">
-                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Data do Laudo</h2>
-                <p style="margin: 0;">${getFormattedDate(report.date)}</p>
-            </div>
-             <div>
-                <h2 style="margin: 0 0 5px 0; font-weight: bold; text-transform: uppercase;">Tipo de Laudo</h2>
-                <p style="margin: 0;">${report.reportType}</p>
-            </div>
+        <div style="background-color: #F5EBE0; padding: 10px 20px; text-align: center; margin-bottom: 25px;">
+            <h1 style="font-size: 22px; font-weight: bold; color: #6E5B4C; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
         </div>
-        
-        <div style="margin-top: 30px;">
+
+        <!-- Patient Info -->
+        <div style="font-size: 13px; line-height: 1.6; border-bottom: 1px solid #EAE0D5; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between;">
+                <div>
+                    <p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p>
+                    <p style="margin: 0;"><strong>Contato:</strong> (não informado)</p>
+                </div>
+                <div>
+                    <p style="margin: 0;"><strong>Protocolo:</strong> ${report.id}</p>
+                    <p style="margin: 0;"><strong>Data de entrada:</strong> ${getFormattedDate(report.date)}</p>
+                </div>
+            </div>
+            <p style="margin-top: 10px;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p>
+        </div>
+
+        <!-- Report Content -->
+        <div>
             ${formattedContent}
         </div>
 
+        <!-- Signature -->
         ${report.signedBy ? `
-        <div style="margin-top: 80px; text-align: center;">
+        <div style="margin-top: 100px; text-align: center; page-break-inside: avoid;">
             <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
             <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
             <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
         </div>
         ` : ''}
+    </div>
     `;
 
     document.body.appendChild(reportElement);
 
     try {
-        const canvas = await html2canvas(reportElement, { scale: 2, useCORS: true });
+        const canvas = await html2canvas(reportElement, { scale: 3, useCORS: true }); // Increased scale for better quality
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
         if (format === 'jpg') {
@@ -238,24 +270,28 @@ export function ReportTable() {
             link.click();
             document.body.removeChild(link);
         } else if (format === 'pdf') {
-            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdf = new jsPDF('p', 'in', 'letter'); // Using inches and letter size
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const imgProps= pdf.getImageProperties(imgData);
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const canvasAspectRatio = canvasWidth / canvasHeight;
             
-            let heightLeft = pdfHeight;
+            // Calculate the height of the image in the PDF to maintain aspect ratio
+            const imgWidth = pdfWidth;
+            let imgHeight = imgWidth / canvasAspectRatio;
+            
+            let heightLeft = imgHeight;
             let position = 0;
-            const pageMargin = 10;
-            const pageHeight = pdf.internal.pageSize.getHeight();
 
-            pdf.addImage(imgData, 'JPEG', pageMargin, position, pdfWidth - (pageMargin * 2), pdfHeight);
-            heightLeft -= pageHeight;
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
 
             while (heightLeft > 0) {
-              position -= pageHeight;
+              position = heightLeft - imgHeight;
               pdf.addPage();
-              pdf.addImage(imgData, 'JPEG', pageMargin, position, pdfWidth - (pageMargin * 2), pdfHeight);
-              heightLeft -= pageHeight;
+              pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pdfHeight;
             }
             
             pdf.save(`laudo-${report.id}.pdf`);
@@ -265,7 +301,7 @@ export function ReportTable() {
         toast({
             variant: "destructive",
             title: "Erro no Download",
-            description: "Não foi possível gerar o arquivo para download. Verifique se o logo.png está na pasta /public.",
+            description: "Não foi possível gerar o arquivo para download. Verifique se o logo está acessível e tente novamente.",
         });
     } finally {
         document.body.removeChild(reportElement);
