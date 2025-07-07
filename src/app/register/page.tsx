@@ -1,17 +1,20 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Stethoscope, ArrowLeft } from 'lucide-react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// A lista de especialidades é mantida para a UI
+
 const specialties = [
   'Cardiologia',
   'Dermatologia',
@@ -25,26 +28,68 @@ const specialties = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [specialty, setSpecialty] = useState('');
 
-  // A lógica de envio do formulário foi simplificada para resolver o erro de compilação.
-  // Ela pode ser restaurada em uma etapa subsequente.
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    console.log('Envio de formulário desativado para depuração:', { name, email, password, specialty });
-    toast({
-      title: 'Cadastro em Manutenção',
-      description: 'A funcionalidade de cadastro está sendo ajustada. Por favor, tente novamente mais tarde.',
-    });
-    setTimeout(() => setIsLoading(false), 1000);
+
+    if (!auth || !db) {
+        toast({ variant: 'destructive', title: 'Erro de Configuração', description: "A conexão com o Firebase não foi estabelecida." });
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await setDoc(doc(db, 'users', user.uid), {
+            uid: user.uid,
+            name: name,
+            email: email,
+            specialty: specialty,
+            role: 'doctor',
+            signature: null,
+        });
+
+        toast({
+            title: 'Conta Criada!',
+            description: 'Sua conta foi criada com sucesso. Redirecionando para o painel...',
+        });
+        
+        router.push('/dashboard');
+
+    } catch (error: any) {
+        console.error("Erro detalhado no cadastro: ", error);
+        let errorMessage = 'Ocorreu um erro desconhecido.';
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Este endereço de e-mail já está em uso.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'O endereço de e-mail fornecido não é válido.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'A senha é muito fraca. Tente uma senha mais forte.';
+                    break;
+                default:
+                    errorMessage = `Um erro inesperado ocorreu: ${error.message}`;
+            }
+        }
+        toast({ variant: 'destructive', title: 'Falha no Cadastro', description: errorMessage });
+    } finally {
+        setIsLoading(false);
+    }
   }
+
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
@@ -88,7 +133,7 @@ export default function RegisterPage() {
                 <ArrowLeft className="mr-1 h-4 w-4"/>
                 Voltar para o Login
               </Link>
-              <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading}>
+              <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading || !name || !email || !password || !specialty}>
                 {isLoading ? 'Enviando...' : 'CADASTRAR'}
               </Button>
           </div>
