@@ -201,9 +201,21 @@ const buildReportHtml = (report: Report): string => {
           <p style="margin: 0;"><strong>Data:</strong> ${getFormattedDate(report.date)}</p>
         </div>
       </header>
-
-      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 12px 20px; text-align: center; margin-bottom: 30px; border-radius: 6px;">
-        <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
+      
+      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2;">${report.reportType}</h1>
+        </div>
+        ${
+          report.authorInfo
+            ? `
+        <div style="text-align: right;">
+          <p style="margin: 0; font-weight: bold;">${report.authorInfo.name}</p>
+          <p style="margin: 0; font-size: 12px;">CRM: ${report.authorInfo.crm}</p>
+        </div>
+        `
+            : ''
+        }
       </div>
 
       <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px;">

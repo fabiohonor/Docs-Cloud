@@ -49,10 +49,10 @@ const generateReportDraftPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de IA especialista em redigir laudos médicos detalhados e técnicos em Português do Brasil.
 
-Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico, com base no **Tipo de Laudo** e nas **Anotações do Médico**.
+Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico. A estrutura do JSON deve ser baseada no tipo de laudo (por exemplo, 'Hemograma', 'Raio-X de Tórax'), e o conteúdo deve ser extraído das anotações do médico.
 
-**Tipo de Laudo:** {{{reportType}}}
-**Anotações do Médico:**
+**Tipo de Laudo (para guiar a estrutura):** {{{reportType}}}
+**Anotações do Médico (para preencher os dados):**
 {{{notes}}}
 
 **REGRAS ESTRITAS:**
