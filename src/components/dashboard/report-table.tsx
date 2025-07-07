@@ -32,34 +32,57 @@ const statusStyles: Record<ReportStatus, string> = {
 };
 
 export function ReportTable({ initialReports }: { initialReports: Report[] }) {
-  const [reports, setReports] = React.useState<Report[]>(initialReports);
+  const [reports, setReports] = React.useState<Report[]>([]);
   const [formattedDates, setFormattedDates] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
+    let reportsFromStorage: Report[];
+    try {
+        const storedReportsRaw = localStorage.getItem('mediclouddocs_reports');
+        if (storedReportsRaw) {
+            reportsFromStorage = JSON.parse(storedReportsRaw);
+        } else {
+            reportsFromStorage = initialReports;
+            localStorage.setItem('mediclouddocs_reports', JSON.stringify(initialReports));
+        }
+    } catch (error) {
+        console.error("Failed to process reports from localStorage", error);
+        reportsFromStorage = initialReports;
+    }
+
+    setReports(reportsFromStorage);
+
     const newFormattedDates: Record<string, string> = {};
-    initialReports.forEach(report => {
-      // Dates are formatted on the client to avoid hydration mismatch.
+    reportsFromStorage.forEach(report => {
       newFormattedDates[report.id] = new Date(report.date).toLocaleDateString('pt-BR');
     });
     setFormattedDates(newFormattedDates);
   }, [initialReports]);
 
   const handleStatusChange = (id: string, status: ReportStatus) => {
-    setReports((prevReports) =>
-      prevReports.map((report) =>
-        report.id === id ? { ...report, status, signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : undefined, signedAt: status === 'Aprovado' ? new Date().toISOString() : undefined } : report
-      )
+    const updatedReports = reports.map((report) =>
+      report.id === id ? { ...report, status, signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : undefined, signedAt: status === 'Aprovado' ? new Date().toISOString() : undefined } : report
     );
+    setReports(updatedReports);
+    try {
+        localStorage.setItem('mediclouddocs_reports', JSON.stringify(updatedReports));
+    } catch (error) {
+        console.error("Failed to save updated reports to localStorage", error);
+    }
     toast({ title: 'Status Atualizado', description: `O status do laudo ${id} foi atualizado para ${status}.` });
   };
   
   const handleSign = (id: string) => {
-    setReports((prevReports) =>
-      prevReports.map((report) =>
-        report.id === id ? { ...report, signedBy: 'Dr. Alan Grant', signedAt: new Date().toISOString() } : report
-      )
+    const updatedReports = reports.map((report) =>
+      report.id === id ? { ...report, signedBy: 'Dr. Alan Grant', signedAt: new Date().toISOString() } : report
     );
+    setReports(updatedReports);
+    try {
+        localStorage.setItem('mediclouddocs_reports', JSON.stringify(updatedReports));
+    } catch (error) {
+        console.error("Failed to save signed report to localStorage", error);
+    }
     toast({ title: 'Laudo Assinado', description: `O laudo ${id} foi assinado digitalmente.` });
   }
 
