@@ -45,18 +45,18 @@ export async function generateReportDraft(
 const generateReportDraftPrompt = ai.definePrompt({
   name: 'generateReportDraftPrompt',
   input: {schema: GenerateReportDraftInputSchema},
-  output: {format: 'json', schema: GenerateReportDraftOutputSchema},
+  // We are removing output schema to get raw text and parse it ourselves.
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de IA especialista em redigir laudos médicos detalhados e técnicos em Português do Brasil.
 
-Sua tarefa é gerar um objeto JSON estruturado para o corpo de um laudo médico, com base no **Tipo de Laudo** e nas **Anotações do Médico**.
+Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico, com base no **Tipo de Laudo** e nas **Anotações do Médico**.
 
 **Tipo de Laudo:** {{{reportType}}}
 **Anotações do Médico:**
 {{{notes}}}
 
 **REGRAS ESTRITAS:**
-1.  **ESTRUTURA JSON:** O resultado DEVE ser um único objeto JSON retornado no campo 'reportData'.
+1.  **ESTRUTURA JSON:** O resultado DEVE ser um único objeto JSON.
 2.  **CONTEÚDO TÉCNICO E ESTRUTURA:** Com base no 'Tipo de Laudo', crie uma estrutura JSON com seções e campos tecnicamente apropriados.
     *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA):** Para seções que contêm uma lista de exames com valores (como "Eritrograma" ou "Leucograma"), a estrutura DEVE ser um objeto onde cada chave é o nome do exame (ex: "Hemácias"). O valor para cada exame DEVE ser outro objeto contendo as chaves \`valor_encontrado\` e \`valor_referencia\`.
         *   **Exemplo de Estrutura Tabular para "Eritrograma":**
@@ -64,10 +64,18 @@ Sua tarefa é gerar um objeto JSON estruturado para o corpo de um laudo médico,
     *   **PARA SEÇÕES DE TEXTO (COMO CONCLUSÃO):** Para seções descritivas, o valor pode ser uma string simples ou um objeto com pares chave-valor.
         *   **Exemplo para "Conclusão":** \`"conclusao": "Paciente apresenta quadro anêmico."\`
 3.  **USE AS ANOTAÇÕES:** Preencha os valores da estrutura JSON usando as informações das 'Anotações do Médico'. Se uma anotação não fornecer um valor para um campo técnico, você pode omiti-lo ou usar um valor padrão como "Não avaliado". NÃO INVENTE DADOS NUMÉRICOS.
-4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente, nome do médico, data ou qualquer outra informação de cabeçalho dentro do JSON.
+4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente ({{{patientName}}}), nome do médico, data ou qualquer outra informação de cabeçalho dentro do JSON.
 5.  **IDIOMA:** Todo o texto (chaves e valores, quando aplicável) deve ser em Português do Brasil.
 
-Gere o objeto JSON e retorne-o no campo 'reportData'.`,
+**INSTRUÇÃO DE SAÍDA CRÍTICA:**
+Sua resposta DEVE ser SOMENTE o objeto JSON, dentro de um bloco de código markdown. Não inclua texto explicativo antes ou depois.
+Exemplo:
+\`\`\`json
+{
+  "chave": "valor"
+}
+\`\`\`
+`,
 });
 
 const generateReportDraftFlow = ai.defineFlow(
@@ -76,11 +84,23 @@ const generateReportDraftFlow = ai.defineFlow(
     inputSchema: GenerateReportDraftInputSchema,
     outputSchema: GenerateReportDraftOutputSchema,
   },
-  async input => {
-    const {output} = await generateReportDraftPrompt(input);
-    if (!output) {
+  async (input) => {
+    const response = await generateReportDraftPrompt.generate({input});
+    const rawText = response.text;
+
+    if (!rawText) {
       throw new Error('A IA não conseguiu gerar um rascunho de laudo válido.');
     }
-    return output;
+
+    try {
+      const jsonMatch = rawText.match(/```json\s*([\s\S]*?)\s*```/);
+      const jsonString = jsonMatch ? jsonMatch[1] : rawText;
+      const parsedData = JSON.parse(jsonString);
+      return { reportData: parsedData };
+    } catch (e) {
+      console.error("Falha ao analisar JSON da IA:", e);
+      console.error("Saída bruta da IA:", rawText);
+      throw new Error("A IA retornou um formato JSON inválido. Verifique o console para a saída bruta.");
+    }
   }
 );
