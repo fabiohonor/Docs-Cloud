@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -7,7 +8,6 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-// Define a fixed ID for the settings document in Firestore
 const SETTINGS_DOC_ID = 'user_profile';
 
 type ThemeProviderProps = {
@@ -19,11 +19,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [specialty, setSpecialtyState] = useState<string>('Cardiologista');
   const [signature, setSignatureState] = useState<string | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const { toast } = useToast();
 
   const settingsDocRef = db ? doc(db, 'settings', SETTINGS_DOC_ID) : null;
 
-  // Fetch settings from Firestore on initial load
   useEffect(() => {
     if (!db) {
       console.warn("Firestore não está disponível. Usando configurações padrão.");
@@ -44,7 +44,6 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           setSpecialtyState(settings.specialty || 'Cardiologista');
           setSignatureState(settings.signature || null);
         } else {
-          // If no settings exist, create them with default values
           await setDoc(settingsDocRef, {
             theme: 'blue',
             specialty: 'Cardiologista',
@@ -64,21 +63,20 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
     fetchSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
-  
-  // Apply theme to the root element
+  }, []);
+
   useEffect(() => {
+    if (isPreviewing) return;
+
     const root = window.document.documentElement;
-    // Remove all possible theme classes
     themes.forEach(t => {
       root.classList.remove(`theme-${t.key}`);
     });
 
-    // Add the new theme class if it's not the default
     if (theme !== 'blue') {
       root.classList.add(`theme-${theme}`);
     }
-  }, [theme]);
+  }, [theme, isPreviewing]);
 
   const updateSetting = useCallback(async (newSettings: Partial<UserSettings>) => {
     if (!settingsDocRef) {
@@ -124,6 +122,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     signature,
     setSignature,
     settingsLoading,
+    isPreviewing,
+    setIsPreviewing,
   };
 
   return (

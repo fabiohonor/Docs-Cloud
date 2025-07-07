@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext } from 'react';
@@ -11,6 +12,8 @@ export type ThemeProviderState = {
   signature: string | null;
   setSignature: (signature: string | null) => void;
   settingsLoading: boolean;
+  isPreviewing: boolean;
+  setIsPreviewing: (isPreviewing: boolean) => void;
 };
 
 export const initialState: ThemeProviderState = {
@@ -21,6 +24,8 @@ export const initialState: ThemeProviderState = {
   signature: null,
   setSignature: () => {},
   settingsLoading: true,
+  isPreviewing: false,
+  setIsPreviewing: () => {},
 };
 
 export const ThemeProviderContext = createContext<ThemeProviderState>(initialState);

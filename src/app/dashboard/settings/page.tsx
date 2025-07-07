@@ -19,12 +19,20 @@ export default function SettingsPage() {
     theme, setTheme, 
     specialty, setSpecialty, 
     signature, setSignature,
-    settingsLoading 
+    settingsLoading,
+    setIsPreviewing
   } = useTheme();
 
   const [inputSpecialty, setInputSpecialty] = useState('');
   const [previewSignature, setPreviewSignature] = useState<string | null>(null);
   const [previewTheme, setPreviewTheme] = useState<Theme>('blue');
+
+  useEffect(() => {
+    setIsPreviewing(true);
+    return () => {
+      setIsPreviewing(false);
+    }
+  }, [setIsPreviewing]);
 
   useEffect(() => {
     if (!settingsLoading) {
@@ -42,15 +50,7 @@ export default function SettingsPage() {
     if (previewTheme && previewTheme !== 'blue') {
       root.classList.add(`theme-${previewTheme}`);
     }
-    
-    // On cleanup, restore the original saved theme when navigating away
-    return () => {
-      themes.forEach(t => root.classList.remove(`theme-${t.key}`));
-      if (theme !== 'blue') {
-        root.classList.add(`theme-${theme}`);
-      }
-    }
-  }, [previewTheme, theme]);
+  }, [previewTheme]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
