@@ -149,12 +149,8 @@ const buildReportHtml = (report: Report): string => {
         <h1 style="font-size: 24px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
       </div>
 
-      <div style="font-size: 14px; line-height: 1.6; border: 1px solid #eee; padding: 15px; margin-bottom: 30px; border-radius: 6px;">
-          <p style="margin: 0; margin-bottom: 8px;"><strong>Paciente:</strong> ${report.patientName}</p>
-          ${report.doctorInfo ? `
-            <p style="margin: 0; margin-bottom: 8px;"><strong>Médico:</strong> ${report.doctorInfo.name}</p>
-            <p style="margin: 0;"><strong>CRM:</strong> ${report.doctorInfo.crm}</p>
-          ` : ''}
+      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; line-height: 1.6;">
+          <p style="margin: 0;"><strong>Paciente:</strong> ${report.patientId} - ${report.patientName}</p>
       </div>
 
       <main style="padding-bottom: 150px;">

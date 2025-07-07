@@ -10,6 +10,7 @@ export interface DoctorInfo {
 
 export interface Report {
   id: string;
+  patientId: string;
   patientName: string;
   reportType: string;
   date: string;

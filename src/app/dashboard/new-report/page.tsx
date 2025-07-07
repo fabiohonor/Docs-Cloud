@@ -29,6 +29,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const formSchema = z.object({
+  patientId: z.string().min(1, { message: 'O ID do paciente é obrigatório.' }),
   patientName: z.string().min(2, { message: 'O nome do paciente é obrigatório.' }),
   reportType: z.string().min(2, { message: 'O tipo de laudo é obrigatório.' }),
   notes: z.string().min(10, { message: 'Forneça algumas anotações para gerar um rascunho.' }),
@@ -47,6 +48,7 @@ export default function NewReportPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      patientId: '',
       patientName: '',
       reportType: '',
       notes: '',
@@ -90,6 +92,7 @@ export default function NewReportPage() {
       }
 
       const newReport: Omit<Report, 'id'> = {
+        patientId: values.patientId,
         patientName: values.patientName,
         reportType: values.reportType,
         date: new Date().toISOString(),
@@ -144,7 +147,18 @@ export default function NewReportPage() {
               <CardTitle>Detalhes do Laudo</CardTitle>
               <CardDescription>Insira as informações do paciente e do laudo.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FormField
+                control={form.control}
+                name="patientId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID do Paciente</FormLabel>
+                    <FormControl><Input placeholder="ex: 987654" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="patientName"
