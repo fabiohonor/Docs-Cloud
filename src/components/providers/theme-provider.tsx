@@ -44,6 +44,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           setSpecialtyState(settings.specialty || 'Cardiologista');
           setSignatureState(settings.signature || null);
         } else {
+          // If no settings exist, create them with default values
           await setDoc(settingsDocRef, {
             theme: 'blue',
             specialty: 'Cardiologista',
@@ -62,14 +63,20 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       }
     };
     fetchSettings();
-  }, [settingsDocRef, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
   
   // Apply theme to the document body
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove(...themes.map((t) => `theme-${t.key}`));
+    const body = document.body;
+    // Remove all possible theme classes
+    themes.forEach(t => {
+      body.classList.remove(`theme-${t.key}`);
+    });
+
+    // Add the new theme class if it's not the default
     if (theme !== 'blue') {
-      root.classList.add(`theme-${theme}`);
+      body.classList.add(`theme-${theme}`);
     }
   }, [theme]);
 
