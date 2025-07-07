@@ -33,7 +33,17 @@ const statusStyles: Record<ReportStatus, string> = {
 
 export function ReportTable({ initialReports }: { initialReports: Report[] }) {
   const [reports, setReports] = React.useState<Report[]>(initialReports);
+  const [formattedDates, setFormattedDates] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    const newFormattedDates: Record<string, string> = {};
+    initialReports.forEach(report => {
+      // Dates are formatted on the client to avoid hydration mismatch.
+      newFormattedDates[report.id] = new Date(report.date).toLocaleDateString();
+    });
+    setFormattedDates(newFormattedDates);
+  }, [initialReports]);
 
   const handleStatusChange = (id: string, status: ReportStatus) => {
     setReports((prevReports) =>
@@ -70,7 +80,7 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
             <TableRow key={report.id}>
               <TableCell className="font-medium">{report.patientName}</TableCell>
               <TableCell>{report.reportType}</TableCell>
-              <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
+              <TableCell>{formattedDates[report.id]}</TableCell>
               <TableCell>
                 <Badge variant="outline" className={cn('font-semibold', statusStyles[report.status])}>
                   {report.status}
