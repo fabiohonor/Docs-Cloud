@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Palette, Check, User } from 'lucide-react';
 import Image from 'next/image';
 import { useTheme } from '@/hooks/use-theme';
-import { themes } from '@/lib/types';
+import { themes, type Theme } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -22,22 +22,42 @@ export default function SettingsPage() {
     settingsLoading 
   } = useTheme();
 
-  const [inputSpecialty, setInputSpecialty] = useState(specialty);
-  const [preview, setPreview] = useState<string | null>(signature);
+  const [inputSpecialty, setInputSpecialty] = useState('');
+  const [previewSignature, setPreviewSignature] = useState<string | null>(null);
+  const [previewTheme, setPreviewTheme] = useState<Theme>('blue');
 
   useEffect(() => {
     if (!settingsLoading) {
       setInputSpecialty(specialty);
-      setPreview(signature);
+      setPreviewSignature(signature);
+      setPreviewTheme(theme);
     }
-  }, [specialty, signature, settingsLoading]);
+  }, [specialty, signature, theme, settingsLoading]);
+
+  // Effect for live theme preview
+  useEffect(() => {
+    const root = window.document.documentElement;
+    // Apply preview theme
+    themes.forEach(t => root.classList.remove(`theme-${t.key}`));
+    if (previewTheme && previewTheme !== 'blue') {
+      root.classList.add(`theme-${previewTheme}`);
+    }
+    
+    // On cleanup, restore the original saved theme when navigating away
+    return () => {
+      themes.forEach(t => root.classList.remove(`theme-${t.key}`));
+      if (theme !== 'blue') {
+        root.classList.add(`theme-${theme}`);
+      }
+    }
+  }, [previewTheme, theme]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === 'image/png') {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result as string);
+        setPreviewSignature(reader.result as string);
       };
       reader.readAsDataURL(file);
     } else {
@@ -46,13 +66,13 @@ export default function SettingsPage() {
         title: 'Formato Inválido',
         description: 'Por favor, selecione um arquivo de imagem no formato PNG.',
       });
-      setPreview(signature);
+      setPreviewSignature(signature);
     }
   };
 
   const handleSaveSignature = () => {
-    if (preview) {
-      setSignature(preview);
+    if (previewSignature) {
+      setSignature(previewSignature);
       toast({
         title: 'Assinatura Salva',
         description: 'Sua assinatura foi salva com sucesso.',
@@ -65,6 +85,14 @@ export default function SettingsPage() {
     toast({
       title: 'Perfil Salvo',
       description: 'Sua especialidade foi atualizada.',
+    });
+  };
+
+  const handleSaveTheme = () => {
+    setTheme(previewTheme);
+    toast({
+        title: 'Tema Salvo',
+        description: 'Seu novo tema foi salvo com sucesso.'
     });
   };
 
@@ -137,7 +165,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Palette /> Tema do Sistema</CardTitle>
           <CardDescription>
-            Escolha um tema de cores para personalizar a aparência do sistema.
+            Escolha um tema para uma pré-visualização ao vivo e salve para aplicá-lo em todo o sistema.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -145,15 +173,15 @@ export default function SettingsPage() {
             {themes.map((item) => (
               <div
                 key={item.key}
-                onClick={() => setTheme(item.key)}
+                onClick={() => setPreviewTheme(item.key)}
                 className={cn(
                   'cursor-pointer rounded-lg border-2 p-4 transition-all',
-                  theme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
+                  previewTheme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
                 )}
               >
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-semibold">{item.name}</h3>
-                  {theme === item.key && <Check className="h-5 w-5 text-primary" />}
+                  {previewTheme === item.key && <Check className="h-5 w-5 text-primary" />}
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   {item.palette.map((color, i) => (
@@ -164,12 +192,15 @@ export default function SettingsPage() {
               </div>
             ))}
           </div>
-          <div className="space-y-4 rounded-lg border bg-background/50 p-4">
-            <h4 className="font-semibold">Prévia do Tema</h4>
-            <div className="flex items-center gap-4">
-              <Button>Botão Principal</Button>
-              <Button variant="secondary">Botão Secundário</Button>
-            </div>
+          <div className="flex items-center justify-between rounded-lg border bg-background/50 p-4">
+              <div className="flex items-center gap-4">
+                <Button>Botão Principal</Button>
+                <Button variant="secondary">Botão Secundário</Button>
+              </div>
+              <Button onClick={handleSaveTheme} disabled={previewTheme === theme}>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Tema
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -194,16 +225,16 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-          {preview && (
+          {previewSignature && (
             <div className="space-y-2">
               <p className="font-medium">Pré-visualização</p>
               <div className="flex h-32 w-full max-w-sm items-center justify-center rounded-md border border-dashed bg-muted/50 p-4">
-                <Image src={preview} alt="Pré-visualização da Assinatura" width={200} height={80} style={{ objectFit: 'contain' }} />
+                <Image src={previewSignature} alt="Pré-visualização da Assinatura" width={200} height={80} style={{ objectFit: 'contain' }} />
               </div>
             </div>
           )}
           <div>
-            <Button onClick={handleSaveSignature} disabled={!preview || preview === signature}>
+            <Button onClick={handleSaveSignature} disabled={!previewSignature || previewSignature === signature}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Assinatura
             </Button>
