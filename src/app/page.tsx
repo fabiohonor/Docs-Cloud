@@ -47,7 +47,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     if (!auth) {
-        toast({ variant: 'destructive', title: 'Falha no Login', description: 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
+        toast({ variant: 'destructive', title: 'Falha na Conexão', description: 'A conexão com o Firebase falhou. Pressione F12 para abrir o console do desenvolvedor e ver o diagnóstico detalhado.' });
         setIsLoading(false);
         return;
     }
@@ -59,9 +59,6 @@ export default function LoginPage() {
       let errorMessage = 'Ocorreu um erro desconhecido.';
       if (error.code) {
         switch (error.code) {
-            case 'auth/configuration-not-found':
-                errorMessage = 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.';
-                break;
             case 'auth/user-not-found':
             case 'auth/wrong-password':
             case 'auth/invalid-credential':

@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Stethoscope, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -62,10 +62,10 @@ export default function RegisterPage() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     if (!auth || !db) {
-      toast({ variant: 'destructive', title: 'Falha no Cadastro', description: 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.' });
+      toast({ variant: 'destructive', title: 'Falha na Conexão', description: 'A conexão com o Firebase falhou. Pressione F12 para abrir o console do desenvolvedor e ver o diagnóstico detalhado.' });
       setIsLoading(false);
       return;
     }
@@ -92,9 +92,6 @@ export default function RegisterPage() {
         
         if (error.code) {
             switch (error.code) {
-                case 'auth/configuration-not-found':
-                    errorMessage = 'Configuração do Firebase não encontrada. Verifique as variáveis no seu arquivo .env e lembre-se de reiniciar o servidor de desenvolvimento após qualquer alteração.';
-                    break;
                 case 'auth/email-already-in-use':
                     errorMessage = 'Este endereço de e-mail já está sendo usado por outra conta.';
                     break;
@@ -119,7 +116,7 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [router, toast]);
 
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
@@ -176,7 +173,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione sua especialidade" />
-                      </SelectTrigger>
+                      </Trigger>
                     </FormControl>
                     <SelectContent>
                       {specialties.map(spec => (

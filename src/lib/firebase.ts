@@ -14,6 +14,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+if (typeof window !== 'undefined') {
+  const configStatus = [
+    { name: 'API Key', value: firebaseConfig.apiKey },
+    { name: 'Auth Domain', value: firebaseConfig.authDomain },
+    { name: 'Project ID', value: firebaseConfig.projectId },
+  ];
+  const isMisconfigured = configStatus.some(item => !item.value);
+  if(isMisconfigured){
+    console.groupCollapsed('%cFirebase está mal configurado. Clique para ver os detalhes.', 'color: red; font-weight: bold;');
+    console.error('ERRO: A conexão com o Firebase falhou. Isso geralmente significa que as variáveis de ambiente não foram carregadas corretamente.');
+    configStatus.forEach(item => {
+      console.log(`${item.name}: ${item.value ? '✔️ Carregado' : '❌ Ausente'}`);
+    });
+    console.warn('AÇÃO: 1. Verifique se você criou um arquivo .env na raiz do projeto.');
+    console.warn('AÇÃO: 2. Verifique se você copiou e colou TODAS as variáveis NEXT_PUBLIC_... do console do Firebase para o arquivo .env.');
+    console.warn('AÇÃO: 3. IMPORTANTE: Reinicie o servidor de desenvolvimento (Ctrl+C, depois `npm run dev`) após salvar o .env.');
+    console.groupEnd();
+  }
+}
+
+
 // Initialize Firebase
 let app: FirebaseApp | undefined;
 let db: Firestore | undefined;
@@ -41,9 +62,7 @@ if (getApps().length > 0) {
     console.error("Falha ao inicializar o Firebase. Verifique sua configuração.", e);
   }
 } else {
-    console.warn("A configuração do Firebase não foi encontrada ou está incompleta. Adicione as variáveis de ambiente ao seu arquivo .env para conectar ao Firestore.");
-    console.warn("Lembre-se de ativar o método de login por Email/Senha no seu console do Firebase e configurar as regras de segurança do Firestore para permitir leitura/escrita na coleção 'users'.");
-    console.warn("IMPORTANTE: Após editar o arquivo .env, você precisa REINICIAR o servidor de desenvolvimento para que as alterações tenham efeito.");
+    // Silencioso no servidor, o console do navegador mostrará o aviso detalhado.
 }
 
 
