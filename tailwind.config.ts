@@ -2,6 +2,17 @@ import type {Config} from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
+  safelist: [
+    'theme-blue',
+    'theme-green',
+    'theme-purple',
+    'theme-orange',
+    'theme-pink',
+    'theme-cyan',
+    'theme-brown',
+    'theme-red',
+    'theme-indigo',
+  ],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
