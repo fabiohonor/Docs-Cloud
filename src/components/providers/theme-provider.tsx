@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [specialty, setSpecialtyState] = useState<string>('Cardiologista');
   const [signature, setSignatureState] = useState<string | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(true);
-  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [previewTheme, setPreviewThemeState] = useState<Theme | null>(null);
   const { toast } = useToast();
 
   const settingsDocRef = db ? doc(db, 'settings', SETTINGS_DOC_ID) : null;
@@ -66,17 +66,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, []);
 
   useEffect(() => {
-    if (isPreviewing) return;
-
+    const themeToApply = previewTheme || theme;
     const root = window.document.documentElement;
+    
     themes.forEach(t => {
       root.classList.remove(`theme-${t.key}`);
     });
 
-    if (theme !== 'blue') {
-      root.classList.add(`theme-${theme}`);
+    if (themeToApply && themeToApply !== 'blue') {
+      root.classList.add(`theme-${themeToApply}`);
     }
-  }, [theme, isPreviewing]);
+  }, [theme, previewTheme]);
 
   const updateSetting = useCallback(async (newSettings: Partial<UserSettings>) => {
     if (!settingsDocRef) {
@@ -101,6 +101,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
+    setPreviewThemeState(null); // Clear preview when setting a permanent theme
     updateSetting({ theme: newTheme });
   }, [updateSetting]);
 
@@ -113,6 +114,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setSignatureState(newSignature);
     updateSetting({ signature: newSignature });
   }, [updateSetting]);
+  
+  const setPreviewTheme = useCallback((themeToPreview: Theme | null) => {
+    setPreviewThemeState(themeToPreview);
+  }, []);
 
   const value: ThemeProviderState = {
     theme,
@@ -122,8 +127,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     signature,
     setSignature,
     settingsLoading,
-    isPreviewing,
-    setIsPreviewing,
+    previewTheme,
+    setPreviewTheme,
   };
 
   return (

@@ -12,8 +12,8 @@ export type ThemeProviderState = {
   signature: string | null;
   setSignature: (signature: string | null) => void;
   settingsLoading: boolean;
-  isPreviewing: boolean;
-  setIsPreviewing: (isPreviewing: boolean) => void;
+  previewTheme: Theme | null;
+  setPreviewTheme: (theme: Theme | null) => void;
 };
 
 export const initialState: ThemeProviderState = {
@@ -24,8 +24,8 @@ export const initialState: ThemeProviderState = {
   signature: null,
   setSignature: () => {},
   settingsLoading: true,
-  isPreviewing: false,
-  setIsPreviewing: () => {},
+  previewTheme: null,
+  setPreviewTheme: () => {},
 };
 
 export const ThemeProviderContext = createContext<ThemeProviderState>(initialState);

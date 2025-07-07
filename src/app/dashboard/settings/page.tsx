@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Palette, Check, User } from 'lucide-react';
 import Image from 'next/image';
 import { useTheme } from '@/hooks/use-theme';
-import { themes, type Theme } from '@/lib/types';
+import { themes } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -20,37 +20,29 @@ export default function SettingsPage() {
     specialty, setSpecialty, 
     signature, setSignature,
     settingsLoading,
-    setIsPreviewing
+    previewTheme, setPreviewTheme
   } = useTheme();
 
   const [inputSpecialty, setInputSpecialty] = useState('');
   const [previewSignature, setPreviewSignature] = useState<string | null>(null);
-  const [previewTheme, setPreviewTheme] = useState<Theme>('blue');
 
+  // When the component mounts, tell the provider to clear any lingering previews.
+  // When it unmounts, also clear previews.
   useEffect(() => {
-    setIsPreviewing(true);
+    setPreviewTheme(null);
     return () => {
-      setIsPreviewing(false);
+      setPreviewTheme(null);
     }
-  }, [setIsPreviewing]);
+  }, [setPreviewTheme]);
 
+  // Sync local UI state with the global state from the provider once it's loaded.
   useEffect(() => {
     if (!settingsLoading) {
       setInputSpecialty(specialty);
       setPreviewSignature(signature);
-      setPreviewTheme(theme);
     }
-  }, [specialty, signature, theme, settingsLoading]);
+  }, [specialty, signature, settingsLoading]);
 
-  // Effect for live theme preview
-  useEffect(() => {
-    const root = window.document.documentElement;
-    // Apply preview theme
-    themes.forEach(t => root.classList.remove(`theme-${t.key}`));
-    if (previewTheme && previewTheme !== 'blue') {
-      root.classList.add(`theme-${previewTheme}`);
-    }
-  }, [previewTheme]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,11 +81,13 @@ export default function SettingsPage() {
   };
 
   const handleSaveTheme = () => {
-    setTheme(previewTheme);
-    toast({
-        title: 'Tema Salvo',
-        description: 'Seu novo tema foi salvo com sucesso.'
-    });
+    if (previewTheme) {
+        setTheme(previewTheme);
+        toast({
+            title: 'Tema Salvo',
+            description: 'Seu novo tema foi salvo com sucesso.'
+        });
+    }
   };
 
   if (settingsLoading) {
@@ -124,6 +118,8 @@ export default function SettingsPage() {
       </div>
     );
   }
+
+  const displayedTheme = previewTheme || theme;
 
   return (
     <div className="space-y-8">
@@ -176,12 +172,12 @@ export default function SettingsPage() {
                 onClick={() => setPreviewTheme(item.key)}
                 className={cn(
                   'cursor-pointer rounded-lg border-2 p-4 transition-all',
-                  previewTheme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
+                  displayedTheme === item.key ? 'border-primary shadow-md' : 'border-transparent hover:border-primary/50'
                 )}
               >
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-semibold">{item.name}</h3>
-                  {previewTheme === item.key && <Check className="h-5 w-5 text-primary" />}
+                  {displayedTheme === item.key && <Check className="h-5 w-5 text-primary" />}
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   {item.palette.map((color, i) => (
@@ -197,7 +193,7 @@ export default function SettingsPage() {
                 <Button>Botão Principal</Button>
                 <Button variant="secondary">Botão Secundário</Button>
               </div>
-              <Button onClick={handleSaveTheme} disabled={previewTheme === theme}>
+              <Button onClick={handleSaveTheme} disabled={!previewTheme || previewTheme === theme}>
                 <Save className="mr-2 h-4 w-4" />
                 Salvar Tema
             </Button>
