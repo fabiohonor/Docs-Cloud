@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -97,25 +98,38 @@ export default function NewReportPage() {
         notes: values.notes,
       };
       
-      await addDoc(collection(db, 'reports'), newReport);
+      const firestorePromise = addDoc(collection(db, 'reports'), newReport);
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 10000) // 10 second timeout
+      );
+
+      await Promise.race([firestorePromise, timeoutPromise]);
 
       toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
       router.push('/dashboard');
     } catch (error) {
       console.error("Failed to save report to Firestore", error);
+      
       let errorMessage = 'Não foi possível salvar o laudo. Verifique sua conexão e configuração do Firebase.';
-      if (error instanceof Error && 'code' in error) {
-          const firebaseError = error as { code: string; message: string };
-          if (firebaseError.code === 'permission-denied') {
-              errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore.';
-          } else if (firebaseError.code === 'unavailable') {
-              errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet.';
-          } else {
-              errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
-          }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
+
+      if (error instanceof Error) {
+        if (error.message === "timeout") {
+            errorMessage = "A requisição para o Firebase demorou muito para responder. Verifique sua conexão com a internet e, principalmente, as regras de segurança do seu banco de dados Firestore. Por padrão, o Firestore bloqueia todas as gravações.";
+        } else if ('code' in error) {
+            const firebaseError = error as { code: string; message: string };
+            if (firebaseError.code === 'permission-denied') {
+                errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore.';
+            } else if (firebaseError.code === 'unavailable') {
+                errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet.';
+            } else {
+                errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
+            }
+        } else {
+             errorMessage = error.message;
+        }
       }
+      
       toast({ variant: 'destructive', title: 'Erro ao Enviar', description: errorMessage });
     } finally {
         setIsSubmitting(false);
