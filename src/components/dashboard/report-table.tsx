@@ -75,56 +75,79 @@ const formatKey = (key: string): string => {
     .replace(/^./, (str) => str.toUpperCase());
 };
 
-const formatValue = (value: any): string => {
-  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    let innerHtml = '<div style="font-size: 14px; color: #555; line-height: 1.6; margin-top: 8px; padding-left: 15px; border-left: 2px solid #EEEBE7;">';
-    for (const innerKey in value) {
-      innerHtml += `<p style="margin: 0 0 8px 0;"><strong style="color: #383838;">${formatKey(innerKey)}:</strong> ${value[innerKey]}</p>`
-    }
-    innerHtml += '</div>';
-    return innerHtml;
-  }
-  if (Array.isArray(value)) {
-    return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
+const buildReportHtml = (report: Report): string => {
+  if (!report) return '';
+
+  const logoUrl = logoImg.src;
+
+  let contentHtml = '';
+  try {
+    const data = JSON.parse(report.content);
+    
+    const formatSectionValue = (value: any): string => {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
+        for (const key in value) {
+          list += `<li style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0;"><span>${formatKey(key)}</span> <strong>${value[key]}</strong></li>`;
+        }
+        list += '</ul>';
+        return list;
+      }
+      if(Array.isArray(value)) {
+          return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
               ${value.map(item => `<li>${item}</li>`).join('')}
            </ul>`;
-  }
-  return String(value).replace(/\n/g, '<br />');
-}
+      }
+      return `<div style="font-size: 14px; color: #555; line-height: 1.6;">${String(value).replace(/\n/g, '<br />')}</div>`;
+    };
 
-const buildHtmlFromObject = (obj: any): string => {
-  let html = '';
-  const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: -3px; margin-right: 8px;"><path d="m13.4 2.6 5.1 5.1"/><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.5L14 4Z"/><path d="M8 18h1"/><path d="M12.5 14.5a2.5 2.5 0 0 1 5 0V18"/><path d="M10 18a2.5 2.5 0 0 0 5 0V18"/></svg>`;
-
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = obj[key];
-      const formattedKey = formatKey(key);
-      html += `<div style="margin-top: 20px;">`;
-      html += `<h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 8px; display: flex; align-items: center;">
-                  ${key.toLowerCase().includes('interpretacao') || key.toLowerCase().includes('interpretation') || key.toLowerCase().includes('resultado') ? icon : ''}
-                  ${formattedKey}
-               </h3>`;
-      html += `<div style="font-size: 14px; color: #555; line-height: 1.6;">${formatValue(value)}</div>`;
-      html += `</div>`;
+    for (const sectionKey in data) {
+      if (Object.prototype.hasOwnProperty.call(data, sectionKey)) {
+        const formattedKey = formatKey(sectionKey);
+        contentHtml += `
+          <div style="margin-top: 25px;">
+            <h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 12px; border-bottom: 2px solid #6E5B4C; padding-bottom: 5px;">
+              ${formattedKey}
+            </h3>
+            ${formatSectionValue(data[sectionKey])}
+          </div>
+        `;
+      }
     }
-  }
-  return html;
-};
-
-const formatReportContent = (content: string): string => {
-  let data;
-  try {
-    data = JSON.parse(content);
   } catch (e) {
-    return `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem;">${content.replace(/\n/g, '<br />')}</div>`;
+    contentHtml = `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
 
-  if (typeof data !== 'object' || data === null) {
-    return `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem;">${content.replace(/\n/g, '<br />')}</div>`;
-  }
-  
-  return buildHtmlFromObject(data);
+  return `
+    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
+        <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
+        <div style="text-align: right;">
+          <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
+          <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
+        </div>
+      </div>
+      <div style="background-color: #F5EBE0; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px;">
+        <h1 style="font-size: 22px; font-weight: bold; color: #6E5B4C; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
+      </div>
+      <div style="font-size: 13px; line-height: 1.6; border-bottom: 1px solid #EAE0D5; padding-bottom: 15px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between;">
+          <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
+          <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
+        </div>
+      </div>
+      <div>
+        ${contentHtml}
+      </div>
+      ${report.signedBy ? `
+      <div style="margin-top: 80px; text-align: center; page-break-inside: avoid;">
+        <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
+        <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
+        <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+      </div>
+      ` : ''}
+    </div>
+  `;
 };
 
 export function ReportTable() {
@@ -174,47 +197,8 @@ export function ReportTable() {
     reportElement.style.width = '8.5in';
     reportElement.style.position = 'absolute';
     reportElement.style.left = '-9999px';
-    reportElement.style.backgroundColor = '#fff';
-    reportElement.style.fontFamily = "'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif";
-    reportElement.style.color = '#383838';
     
-    const formattedContent = formatReportContent(report.content);
-    const logoUrl = logoImg.src;
-
-    reportElement.innerHTML = `
-      <div style="padding: 0.75in;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
-          <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
-          <div style="text-align: right;">
-            <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
-            <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
-          </div>
-        </div>
-        
-        <div style="background-color: #F5EBE0; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px;">
-            <h1 style="font-size: 22px; font-weight: bold; color: #6E5B4C; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
-        </div>
-
-        <div style="font-size: 13px; line-height: 1.6; border-bottom: 1px solid #EAE0D5; padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between;">
-                <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
-                <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
-            </div>
-        </div>
-
-        <div>
-            ${formattedContent}
-        </div>
-
-        ${report.signedBy ? `
-        <div style="margin-top: 80px; text-align: center; page-break-inside: avoid;">
-            <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
-            <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
-            <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
-        </div>
-        ` : ''}
-      </div>
-    `;
+    reportElement.innerHTML = buildReportHtml(report); 
 
     document.body.appendChild(reportElement);
 
@@ -420,7 +404,7 @@ export function ReportTable() {
           </DialogHeader>
           <div className="flex-grow overflow-y-auto -mx-6 px-6">
              <div
-                dangerouslySetInnerHTML={{ __html: viewingReport ? formatReportContent(viewingReport.content) : '' }}
+                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport) : '' }}
              />
           </div>
           <DialogFooter className="pt-4">
@@ -431,5 +415,3 @@ export function ReportTable() {
     </>
   );
 }
-
-    
