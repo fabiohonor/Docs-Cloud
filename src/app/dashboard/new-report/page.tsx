@@ -24,9 +24,10 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Report, ReportStatus } from '@/lib/types';
+import type { Report, ReportStatus, DoctorInfo } from '@/lib/types';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
 
 const formSchema = z.object({
   patientId: z.string().min(1, { message: 'O ID do paciente é obrigatório.' }),
@@ -44,6 +45,7 @@ export default function NewReportPage() {
   const [technicalDetails, setTechnicalDetails] = useState('');
   const { toast } = useToast();
   const router = useRouter();
+  const { userProfile } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,10 +88,24 @@ export default function NewReportPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+
+    if (!userProfile) {
+        toast({ variant: 'destructive', title: 'Erro de Autenticação', description: 'Não foi possível identificar o usuário. Por favor, recarregue a página.' });
+        setIsSubmitting(false);
+        return;
+    }
+
     try {
       if (!db) {
         throw new Error("A conexão com o banco de dados não foi estabelecida. Verifique sua configuração do Firebase no arquivo .env.");
       }
+      
+      const authorInfo: DoctorInfo = {
+        name: userProfile.name,
+        specialty: userProfile.specialty,
+        crm: userProfile.crm,
+        signature: userProfile.signature,
+      };
 
       const newReport: Omit<Report, 'id'> = {
         patientId: values.patientId,
@@ -99,6 +115,8 @@ export default function NewReportPage() {
         status: 'Pendente' as ReportStatus,
         content: values.draft,
         notes: values.notes,
+        authorInfo: authorInfo,
+        approverInfo: null,
       };
       
       await addDoc(collection(db, 'reports'), newReport);
@@ -262,7 +280,7 @@ export default function NewReportPage() {
               </DialogContent>
             </Dialog>
 
-            <Button type="submit" disabled={!form.getValues('draft') || isSubmitting}>
+            <Button type="submit" disabled={!form.getValues('draft') || isSubmitting || !userProfile}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

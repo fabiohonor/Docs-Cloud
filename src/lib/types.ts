@@ -17,7 +17,8 @@ export interface Report {
   status: ReportStatus;
   content: string;
   notes?: string;
-  doctorInfo?: DoctorInfo | null;
+  authorInfo?: DoctorInfo | null;
+  approverInfo?: DoctorInfo | null;
   signedAt?: string;
 }
 

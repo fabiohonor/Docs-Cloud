@@ -95,7 +95,7 @@ const buildReportHtml = (report: Report): string => {
   if (!report) return '';
 
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
-  const signatureDataUrl = report.doctorInfo?.signature;
+  const signatureDataUrl = report.approverInfo?.signature;
 
   let contentHtml = '';
   try {
@@ -149,8 +149,20 @@ const buildReportHtml = (report: Report): string => {
         <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
       </div>
 
-      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; line-height: 1.6;">
-          <p style="margin: 0;"><strong>Paciente:</strong> ${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
+      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+          <p style="margin: 0; font-weight: bold;">Paciente</p>
+          <p style="margin: 0;">${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
+        </div>
+        ${
+          report.authorInfo
+            ? `
+        <div>
+          <p style="margin: 0; font-weight: bold;">Médico Autor</p>
+          <p style="margin: 0;">${report.authorInfo.name} | CRM: ${report.authorInfo.crm}</p>
+        </div>`
+            : ''
+        }
       </div>
 
       <main style="padding-bottom: 150px;">
@@ -159,13 +171,13 @@ const buildReportHtml = (report: Report): string => {
 
       <footer style="position: absolute; bottom: 40px; left: 40px; right: 40px; page-break-inside: avoid; text-align: center;">
         ${
-          report.status === 'Aprovado' && report.doctorInfo
+          report.status === 'Aprovado' && report.approverInfo
             ? `
         <div>
           ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
-          <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px; font-weight: bold;">${report.doctorInfo.name}</p>
-          <p style="font-size: 12px; color: #777; margin: 4px 0;">${report.doctorInfo.specialty}</p>
-          <p style="font-size: 12px; color: #777; margin: 4px 0 8px 0;">CRM: ${report.doctorInfo.crm}</p>
+          <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px; font-weight: bold;">${report.approverInfo.name}</p>
+          <p style="font-size: 12px; color: #777; margin: 4px 0;">${report.approverInfo.specialty}</p>
+          <p style="font-size: 12px; color: #777; margin: 4px 0 8px 0;">CRM: ${report.approverInfo.crm}</p>
           <p style="font-size: 12px; color: #777; margin: 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
         </div>
         `
@@ -280,7 +292,7 @@ export function ReportTable() {
     if (!db || !userProfile) return;
     const reportRef = doc(db, 'reports', id);
     try {
-      const doctorInfo: DoctorInfo | null = status === 'Aprovado' ? {
+      const approverInfo: DoctorInfo | null = status === 'Aprovado' ? {
         name: userProfile.name,
         specialty: userProfile.specialty,
         crm: userProfile.crm,
@@ -289,7 +301,7 @@ export function ReportTable() {
 
       await updateDoc(reportRef, {
         status,
-        doctorInfo,
+        approverInfo,
         signedAt: status === 'Aprovado' ? new Date().toISOString() : null,
       });
       toast({
@@ -388,7 +400,7 @@ export function ReportTable() {
                       {report.status === 'Aprovado' && (
                          <DropdownMenuItem disabled>
                            <FileSignature className="mr-2 h-4 w-4" />
-                           Aprovado por {report.doctorInfo?.name.split(' ')[0]}
+                           Aprovado por {report.approverInfo?.name.split(' ')[0]}
                          </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
