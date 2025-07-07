@@ -39,6 +39,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import logoImg from '@/imagens/logo.png';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -63,7 +64,7 @@ const formatReportContent = (content: string): string => {
   try {
     data = JSON.parse(content);
   } catch (e) {
-    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
   }
 
   if (data && typeof data === 'object' && data.reportDraft) {
@@ -75,51 +76,63 @@ const formatReportContent = (content: string): string => {
   }
 
   if (typeof data !== 'object' || data === null) {
-    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
+    return `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
   }
 
   const formatKey = (key: string): string => {
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/_/g, ' ')
+      .trim()
       .replace(/^./, (str) => str.toUpperCase());
   };
 
-  const processValue = (value: any): string => {
-    if (value === null || value === undefined) return '';
-    if (Array.isArray(value)) {
-      return `<ul style="list-style-type: none; padding-left: 0; margin: 0;">${value.map(item => `<li style="margin-bottom: 5px;">- ${processValue(item)}</li>`).join('')}</ul>`;
-    }
-    if (typeof value === 'object') {
-      let objectHtml = '<div style="padding-left: 15px;">';
-      for (const key in value) {
-        objectHtml += `<div style="margin: 5px 0;"><strong style="display: block; font-weight: bold;">${formatKey(key)}:</strong> ${processValue(value[key])}</div>`;
+  const buildHtml = (obj: any, isRoot = true): string => {
+    let html = isRoot ? '' : '<div style="padding-left: 20px; margin-top: 5px;">';
+
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const value = obj[key];
+        const formattedKey = formatKey(key);
+
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          if (isRoot) {
+             html += `<div style="margin-top: 20px;">
+                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
+                        ${buildHtml(value, false)}
+                      </div>`;
+          } else {
+             html += `<div>
+                        <strong style="font-weight: bold;">${formattedKey}:</strong>
+                        ${buildHtml(value, false)}
+                      </div>`;
+          }
+        } else if (Array.isArray(value)) {
+            html += `<div style="margin-top: 20px;">
+                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
+                        <ul style="list-style-type: none; padding-left: 0; margin: 0;">${value.map(item => `<li style="margin-bottom: 5px;">- ${typeof item === 'object' ? buildHtml(item, false) : String(item)}</li>`).join('')}</ul>
+                     </div>`
+        }
+        else {
+          const displayValue = String(value).replace(/\n/g, '<br />');
+           if (isRoot) {
+             html += `<div style="margin-top: 20px;">
+                        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${formattedKey}</h3>
+                        <div style="font-size: 14px; color: #555; line-height: 1.6;">${displayValue}</div>
+                      </div>`;
+           } else {
+              html += `<div style="margin-bottom: 5px;"><strong style="font-weight: bold;">${formattedKey}:</strong> ${displayValue}</div>`;
+           }
+        }
       }
-      objectHtml += '</div>';
-      return objectHtml;
     }
-    return String(value).replace(/\n/g, '<br />');
+    html += isRoot ? '' : '</div>';
+    return html;
   };
 
-  let htmlContent = '';
-  for (const key in data) {
-    if (Object.prototype.hasOwnProperty.call(data, key)) {
-      const title = formatKey(key);
-      const value = data[key];
-      if (value && (typeof value !== 'string' || value.trim() !== '')) {
-         htmlContent += `
-          <div style="margin-top: 20px;">
-            <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 12px; color: #333; text-transform: uppercase; letter-spacing: 0.5px;">${title}</h3>
-            <div style="font-size: 14px; color: #555; line-height: 1.6;">${processValue(value)}</div>
-          </div>
-        `;
-      }
-    }
-  }
-
-  return htmlContent || `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content}</div>`;
+  const finalHtml = buildHtml(data, true);
+  return finalHtml || `<div style="white-space: pre-wrap; font-family: Arial, sans-serif;">${content.replace(/\n/g, '<br />')}</div>`;
 };
-
 
 export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
@@ -173,10 +186,11 @@ export function ReportTable() {
     reportElement.style.fontFamily = 'Arial, sans-serif';
 
     const formattedContent = formatReportContent(report.content);
+    const logoUrl = logoImg.src;
 
     reportElement.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid #eee;">
-            <img src="/logo.png" alt="Hospital São Rafael Logo" style="height: 50px;" />
+            <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
             <div style="text-align: right;">
                 <h1 style="font-size: 24px; font-weight: bold; color: #111; margin: 0;">Laudo Médico</h1>
             </div>
