@@ -145,12 +145,12 @@ const buildReportHtml = (report: Report): string => {
         </div>
       </header>
 
-      <div style="background-color: hsl(var(--muted)); padding: 12px 20px; text-align: center; margin-bottom: 30px; border-radius: 6px;">
-        <h1 style="font-size: 24px; font-weight: 700; color: hsl(var(--foreground)); margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
+      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 12px 20px; text-align: center; margin-bottom: 30px; border-radius: 6px;">
+        <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px;">${report.reportType}</h1>
       </div>
 
       <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; line-height: 1.6;">
-          <p style="margin: 0;"><strong>Paciente:</strong> ${report.patientId} - ${report.patientName}</p>
+          <p style="margin: 0;"><strong>Paciente:</strong> ${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
       </div>
 
       <main style="padding-bottom: 150px;">
@@ -158,7 +158,9 @@ const buildReportHtml = (report: Report): string => {
       </main>
 
       <footer style="position: absolute; bottom: 40px; left: 40px; right: 40px; page-break-inside: avoid; text-align: center;">
-        ${report.doctorInfo ? `
+        ${
+          report.status === 'Aprovado' && report.doctorInfo
+            ? `
         <div>
           ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
           <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px; font-weight: bold;">${report.doctorInfo.name}</p>
@@ -166,7 +168,9 @@ const buildReportHtml = (report: Report): string => {
           <p style="font-size: 12px; color: #777; margin: 4px 0 8px 0;">CRM: ${report.doctorInfo.crm}</p>
           <p style="font-size: 12px; color: #777; margin: 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </footer>
     </div>
   `;
