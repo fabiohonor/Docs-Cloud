@@ -14,8 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Stethoscope } from 'lucide-react';
+import { Stethoscope, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
 const formSchema = z.object({
@@ -50,27 +49,48 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-2xl">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Stethoscope className="h-8 w-8" />
-            </div>
-            <CardTitle className="text-3xl font-bold">MediCloud Docs</CardTitle>
-            <CardDescription>Acesse seu espaço de trabalho médico com segurança</CardDescription>
-          </CardHeader>
-          <CardContent>
+    <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-primary/10 via-background to-background p-4 font-body">
+      <div className="w-full max-w-5xl flex rounded-2xl shadow-2xl overflow-hidden">
+        {/* Left Pane */}
+        <div className="w-2/5 bg-primary p-12 text-primary-foreground flex-col justify-between items-center text-center hidden md:flex">
+          <div className="flex items-center gap-2 self-start">
+            <Stethoscope className="h-8 w-8" />
+            <h1 className="text-xl font-bold">MediCloud Docs</h1>
+          </div>
+
+          <div className="text-center">
+            <h2 className="text-4xl font-bold">Inscreva-se</h2>
+            <div className="w-1/3 mx-auto border-b-2 border-primary-foreground mt-2 mb-4"></div>
+            <p className="text-primary-foreground/80">
+              Ainda não tem uma conta? Crie uma agora.
+            </p>
+          </div>
+          
+          <Button variant="secondary" className="w-full max-w-xs group">
+            Criar Conta
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </div>
+
+        {/* Right Pane (Form) */}
+        <div className="w-full md:w-3/5 bg-card text-card-foreground p-8 sm:p-16 flex flex-col justify-center">
+            <h2 className="text-3xl font-bold mb-2">Login</h2>
+            <p className="text-muted-foreground">Use suas credenciais para acessar a plataforma.</p>
+
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="mt-10 space-y-10">
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Endereço de E-mail</FormLabel>
+                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Usuário</FormLabel>
                       <FormControl>
-                        <Input placeholder="nome@exemplo.com" {...field} />
+                        <Input
+                          placeholder="nome@exemplo.com"
+                          {...field}
+                          className="border-0 border-b bg-transparent rounded-none px-1 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary transition-colors"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -81,21 +101,28 @@ export default function LoginPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Senha</FormLabel>
+                      <FormLabel className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Senha</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                          className="border-0 border-b bg-transparent rounded-none px-1 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary transition-colors"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Entrando...' : 'Entrar'}
-                </Button>
+                <div className="flex items-center justify-between flex-wrap gap-4 pt-4">
+                     <a href="#" className="text-sm text-primary hover:underline">Esqueceu a senha?</a>
+                     <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading}>
+                        {isLoading ? 'Entrando...' : 'ENTRAR'}
+                     </Button>
+                </div>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+        </div>
       </div>
     </main>
   );
