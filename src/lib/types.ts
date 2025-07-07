@@ -20,7 +20,7 @@ export interface Report {
   authorInfo?: DoctorInfo | null;
   approverInfo?: DoctorInfo | null;
   signedAt?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }
 
 export type Theme = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'brown' | 'red' | 'indigo';

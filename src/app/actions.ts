@@ -96,7 +96,7 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
             notes: parsedInput.data.notes,
             authorInfo: parsedInput.data.authorInfo,
             approverInfo: null,
-            imageUrl: imageResult.imageUrl, // Adiciona a URL da imagem
+            imageUrl: imageResult.imageUrl || null, // Adiciona a URL da imagem ou null
         };
 
         // 3. Salvar o laudo no Firestore
