@@ -47,8 +47,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-
-const SIGNATURE_STORAGE_KEY = 'doctorSignature';
+import logoUrl from '@/imagens/logo.png';
+import Image from 'next/image';
+import { useTheme } from '@/hooks/use-theme';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -69,10 +70,22 @@ const getFormattedDate = (dateString: string) => {
 };
 
 const formatKey = (key: string): string => {
-  if (key === 'patientName') return 'Paciente';
-  if (key === 'reportType') return 'Tipo de Laudo';
-  if (key === 'date') return 'Data';
-  
+  const keyMap: Record<string, string> = {
+    patientName: 'Paciente',
+    reportType: 'Tipo de Laudo',
+    date: 'Data',
+    doctorNotes: 'Anotações do Médico',
+    clinicalInterpretation: 'Interpretação Clínica',
+    quantitativeAnalysis: 'Análise Quantitativa',
+    referenceValues: 'Valores de Referência',
+    result: 'Resultado',
+    observations: 'Observações'
+  };
+
+  if (keyMap[key]) {
+    return keyMap[key];
+  }
+
   return key
     .replace(/([A-Z])/g, ' $1')
     .replace(/_/g, ' ')
@@ -82,32 +95,35 @@ const formatKey = (key: string): string => {
 
 const buildReportHtml = (report: Report, signatureDataUrl: string | null): string => {
   if (!report) return '';
-
-  const logoUrl = '/logo.png'; 
+  const logoSrc = logoUrl.src;
 
   let contentHtml = '';
   try {
     const data = JSON.parse(report.content);
     
     const formatSectionValue = (value: any, key?: string): string => {
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
-            for (const subKey in value) {
-                list += `<li style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
-            }
-            list += '</ul>';
-            return list;
-        }
-        if (Array.isArray(value)) {
-            return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
-                ${value.map(item => `<li>${item}</li>`).join('')}
-            </ul>`;
-        }
-        if (key === 'Resultado' && String(value).includes('HCG')) {
-            return `<div style="font-size: 16px; font-weight: bold; color: #383838; text-align: center; padding: 10px; border: 1px solid #EAE0D5; border-radius: 4px; background: #F5EBE0;">${String(value)}</div>`
-        }
-        return `<div style="font-size: 14px; color: #555; line-height: 1.6;">${String(value).replace(/\n/g, '<br />')}</div>`;
-    };
+      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
+          for (const subKey in value) {
+              list += `<li style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f0f0f0;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
+          }
+          list += '</ul>';
+          return list;
+      }
+      if (Array.isArray(value)) {
+          return `<ul style="list-style-type: disc; padding-left: 20px; margin: 8px 0; font-size: 14px; color: #555; line-height: 1.6;">
+              ${value.map(item => `<li>${item}</li>`).join('')}
+          </ul>`;
+      }
+      
+      const formattedKey = key ? formatKey(key) : '';
+
+      if (formattedKey === 'Resultado' && String(value).includes('HCG')) {
+          return `<div style="font-size: 16px; font-weight: bold; color: #383838; text-align: center; padding: 10px; border: 1px solid #EAE0D5; border-radius: 4px; background: #F5EBE0;">${String(value)}</div>`;
+      }
+
+      return `<div style="font-size: 14px; color: #555; line-height: 1.6; white-space: pre-wrap;">${String(value)}</div>`;
+  };
 
     for (const sectionKey in data) {
       if (Object.prototype.hasOwnProperty.call(data, sectionKey)) {
@@ -117,7 +133,7 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
             <h3 style="font-size: 16px; font-weight: bold; color: #383838; margin-bottom: 12px; border-bottom: 2px solid #6E5B4C; padding-bottom: 5px;">
               ${formattedKey}
             </h3>
-            ${formatSectionValue(data[sectionKey], formattedKey)}
+            ${formatSectionValue(data[sectionKey], sectionKey)}
           </div>
         `;
       }
@@ -125,36 +141,41 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
   } catch (e) {
     contentHtml = `<div style="white-space: pre-wrap; font-family: sans-serif; padding: 1rem; font-size: 14px; color: #555; line-height: 1.6;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
-
+  
   return `
-    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px;">
+    <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm;">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
-        <img src="${logoUrl}" alt="Hospital São Rafael Logo" style="height: 50px;" />
+        <img src="${logoSrc}" alt="Logo" style="height: 50px;" />
         <div style="text-align: right;">
+          <h2 style="font-size: 18px; margin: 0; font-weight: bold;">Hospital São Rafael</h2>
           <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
           <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
         </div>
       </div>
+      
       <div style="background-color: #6E5B4C; padding: 10px 20px; text-align: center; margin-top: 25px; margin-bottom: 25px; border-radius: 4px;">
         <h1 style="font-size: 22px; font-weight: bold; color: #fff; margin: 0; text-transform: uppercase;">${report.reportType}</h1>
       </div>
-      <div style="font-size: 13px; line-height: 1.6; border: 1px solid #EAE0D5; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
-        <div style="display: flex; justify-content: space-between;">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px; line-height: 1.6; border: 1px solid #EAE0D5; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
           <div><p style="margin: 0;"><strong>Paciente:</strong> ${report.patientName}</p></div>
           <div><p style="margin: 0;"><strong>Médico responsável:</strong> ${report.signedBy || 'Dr. Alan Grant'}</p></div>
-        </div>
       </div>
+
       <div>
         ${contentHtml}
       </div>
-      ${report.signedBy ? `
-      <div style="margin-top: 80px; text-align: center; page-break-inside: avoid;">
-        ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
-        <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
-        <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
-        <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+
+      <div style="position: absolute; bottom: 40px; left: 40px; right: 40px;">
+        ${report.signedBy ? `
+        <div style="text-align: center; page-break-inside: avoid;">
+          ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
+          <p style="font-size: 14px; margin: 0; line-height: 1;">_________________________</p>
+          <p style="font-size: 14px; margin: 8px 0 0 0;">${report.signedBy}</p>
+          <p style="font-size: 12px; color: #555; margin: 4px 0 0 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+        </div>
+        ` : ''}
       </div>
-      ` : ''}
     </div>
   `;
 };
@@ -163,7 +184,7 @@ export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
   const [isDownloading, setIsDownloading] = React.useState<{id: string, format: 'pdf' | 'jpg'} | null>(null);
   const [viewingReport, setViewingReport] = React.useState<Report | null>(null);
-  const [signature, setSignature] = React.useState<string | null>(null);
+  const { signature } = useTheme();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -175,11 +196,6 @@ export function ReportTable() {
           'A conexão com o banco de dados não foi estabelecida. Verifique as credenciais do Firebase em seu arquivo .env.',
       });
       return;
-    }
-
-    const savedSignature = localStorage.getItem(SIGNATURE_STORAGE_KEY);
-    if (savedSignature) {
-      setSignature(savedSignature);
     }
     
     const q = query(collection(db, 'reports'), orderBy('date', 'desc'));
@@ -208,19 +224,18 @@ export function ReportTable() {
 
   const handleDownload = async (report: Report, format: 'pdf' | 'jpg') => {
     setIsDownloading({ id: report.id, format });
-    const signatureDataUrl = localStorage.getItem(SIGNATURE_STORAGE_KEY);
 
     const reportElement = document.createElement('div');
-    reportElement.style.width = '8.5in';
     reportElement.style.position = 'absolute';
     reportElement.style.left = '-9999px';
+    reportElement.style.top = '0';
     
-    reportElement.innerHTML = buildReportHtml(report, signatureDataUrl); 
+    reportElement.innerHTML = buildReportHtml(report, signature); 
 
     document.body.appendChild(reportElement);
 
     try {
-        const canvas = await html2canvas(reportElement, { scale: 3, useCORS: true, allowTaint: true });
+        const canvas = await html2canvas(reportElement.firstChild as HTMLElement, { scale: 3, useCORS: true });
         const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
         if (format === 'jpg') {
@@ -231,24 +246,28 @@ export function ReportTable() {
             link.click();
             document.body.removeChild(link);
         } else if (format === 'pdf') {
-            const pdf = new jsPDF('p', 'in', 'letter');
+            const pdf = new jsPDF('p', 'in', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
             const canvasWidth = canvas.width;
             const canvasHeight = canvas.height;
             const canvasAspectRatio = canvasWidth / canvasHeight;
-            const imgHeight = pdfWidth / canvasAspectRatio;
-            
+            let imgHeight = pdfWidth / canvasAspectRatio;
             let heightLeft = imgHeight;
             let position = 0;
-
-            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
-            heightLeft -= pdf.internal.pageSize.getHeight();
-
-            while (heightLeft > 0) {
-              position = heightLeft - imgHeight;
-              pdf.addPage();
-              pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-              heightLeft -= pdf.internal.pageSize.getHeight();
+            
+            if (imgHeight > pdfHeight) {
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+                heightLeft -= pdfHeight;
+    
+                while (heightLeft > 0) {
+                  position = -heightLeft;
+                  pdf.addPage();
+                  pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+                  heightLeft -= pdfHeight;
+                }
+            } else {
+                 pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
             }
             
             pdf.save(`laudo-${report.id}.pdf`);
@@ -368,16 +387,10 @@ export function ReportTable() {
                           </DropdownMenuItem>
                         </>
                       )}
-                      {report.status === 'Aprovado' && !report.signedBy && (
-                         <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Aprovado')}>
-                           <FileSignature className="mr-2 h-4 w-4 text-primary" />
-                           Assinar Digitalmente
-                         </DropdownMenuItem>
-                      )}
-                       {report.signedBy && (
+                      {report.status === 'Aprovado' && (
                          <DropdownMenuItem disabled>
                            <FileSignature className="mr-2 h-4 w-4" />
-                           Assinado
+                           Aprovado
                          </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
@@ -397,12 +410,13 @@ export function ReportTable() {
               Laudo para {viewingReport?.patientName} de {getFormattedDate(viewingReport?.date || '')}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-grow overflow-y-auto -mx-6 px-6 bg-gray-50">
+          <div className="flex-grow overflow-y-auto -mx-6 px-2 bg-gray-50">
              <div
+                className="scale-[.48] -translate-x-1/4 -translate-y-[26%] origin-top-left"
                 dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 border-t">
              <Button variant="outline" onClick={() => setViewingReport(null)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>

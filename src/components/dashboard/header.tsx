@@ -16,23 +16,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-
-const SPECIALTY_STORAGE_KEY = 'doctorSpecialty';
+import { useTheme } from '@/hooks/use-theme';
 
 export function DashboardHeader() {
   const router = useRouter();
-  const [specialty, setSpecialty] = useState('Cardiologista');
-
-  useEffect(() => {
-    const savedSpecialty = localStorage.getItem(SPECIALTY_STORAGE_KEY);
-    if (savedSpecialty) {
-      setSpecialty(savedSpecialty);
-    }
-  }, []);
+  const { specialty } = useTheme();
 
   const handleLogout = () => {
-    // In a real app, this would clear the session/token
     router.push('/');
   };
 

@@ -6,38 +6,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Save, Palette, Check, User } from 'lucide-react';
+import { Save, Palette, Check, User } from 'lucide-react';
 import Image from 'next/image';
-import { useTheme, themes } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
+import { themes } from '@/lib/types';
 import { cn } from '@/lib/utils';
-
-const SIGNATURE_STORAGE_KEY = 'doctorSignature';
-const SPECIALTY_STORAGE_KEY = 'doctorSpecialty';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  const { 
+    theme, setTheme, 
+    specialty, setSpecialty, 
+    signature, setSignature,
+    settingsLoading 
+  } = useTheme();
 
-  // Signature state
-  const [signature, setSignature] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  // Profile state
-  const [specialty, setSpecialty] = useState('');
-  const [currentSpecialty, setCurrentSpecialty] = useState('');
+  const [inputSpecialty, setInputSpecialty] = useState(specialty);
+  const [preview, setPreview] = useState<string | null>(signature);
 
   useEffect(() => {
-    // Load signature from local storage
-    const savedSignature = localStorage.getItem(SIGNATURE_STORAGE_KEY);
-    if (savedSignature) {
-      setSignature(savedSignature);
-      setPreview(savedSignature);
+    if (!settingsLoading) {
+      setInputSpecialty(specialty);
+      setPreview(signature);
     }
-    // Load specialty from local storage
-    const savedSpecialty = localStorage.getItem(SPECIALTY_STORAGE_KEY) || 'Cardiologista';
-    setCurrentSpecialty(savedSpecialty);
-    setSpecialty(savedSpecialty);
-  }, []);
+  }, [specialty, signature, settingsLoading]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -59,23 +52,50 @@ export default function SettingsPage() {
 
   const handleSaveSignature = () => {
     if (preview) {
-      localStorage.setItem(SIGNATURE_STORAGE_KEY, preview);
       setSignature(preview);
       toast({
         title: 'Assinatura Salva',
-        description: 'Sua assinatura foi salva com sucesso no navegador.',
+        description: 'Sua assinatura foi salva com sucesso.',
       });
     }
   };
 
   const handleSaveProfile = () => {
-    localStorage.setItem(SPECIALTY_STORAGE_KEY, specialty);
-    setCurrentSpecialty(specialty);
+    setSpecialty(inputSpecialty);
     toast({
       title: 'Perfil Salvo',
       description: 'Sua especialidade foi atualizada.',
     });
   };
+
+  if (settingsLoading) {
+    return (
+      <div className="space-y-8">
+        <div>
+            <Skeleton className="h-10 w-1/3 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+        </div>
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-8 w-1/4 mb-2" />
+                <Skeleton className="h-4 w-2/3" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-10 w-1/2" />
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-8 w-1/4 mb-2" />
+                <Skeleton className="h-4 w-2/3" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-24 w-full" />
+            </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -97,15 +117,15 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <Input
                 id="specialty-input"
-                value={specialty}
-                onChange={(e) => setSpecialty(e.target.value)}
+                value={inputSpecialty}
+                onChange={(e) => setInputSpecialty(e.target.value)}
                 className="max-w-xs"
                 placeholder="Ex: Cardiologista"
               />
             </div>
           </div>
           <div>
-            <Button onClick={handleSaveProfile} disabled={specialty === currentSpecialty}>
+            <Button onClick={handleSaveProfile} disabled={inputSpecialty === specialty}>
               <Save className="mr-2 h-4 w-4" />
               Salvar Perfil
             </Button>
