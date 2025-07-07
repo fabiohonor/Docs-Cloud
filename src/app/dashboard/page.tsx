@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ReportTable } from '@/components/dashboard/report-table';
 import { PlusCircle } from 'lucide-react';
+import Image from 'next/image';
 
 export default function DashboardPage() {
 
@@ -29,7 +30,7 @@ export default function DashboardPage() {
         </p>
         <div className="bg-muted/50 p-4 rounded-md flex items-center justify-center min-h-[80px]">
           {/* O Next.js serve arquivos da pasta 'public' na raiz do site. */}
-          <img src="/logo.png" alt="Pré-visualização da Logo" className="max-h-12" />
+          <Image src="/logo.png" alt="Pré-visualização da Logo" width={160} height={48} className="max-h-12 w-auto object-contain" />
         </div>
       </div>
 

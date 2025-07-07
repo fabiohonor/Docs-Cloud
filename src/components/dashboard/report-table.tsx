@@ -94,6 +94,8 @@ const formatKey = (key: string): string => {
 const buildReportHtml = (report: Report, signatureDataUrl: string | null): string => {
   if (!report) return '';
 
+  const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
+
   let contentHtml = '';
   try {
     const data = JSON.parse(report.content);
@@ -143,7 +145,7 @@ const buildReportHtml = (report: Report, signatureDataUrl: string | null): strin
     <div style="background-color: #fff; font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #383838; padding: 40px; width: 21cm; min-height: 29.7cm; margin: 0 auto;">
       <div style="position: relative; padding-bottom: 150px;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE0D5; padding-bottom: 20px;">
-          <img src="/logo.png" alt="Logo" style="height: 50px;" />
+          <img src="${logoUrl}" alt="Logo" style="height: 50px;" />
           <div style="text-align: right;">
             <p style="font-size: 12px; margin: 0;">Protocolo: ${report.id}</p>
             <p style="font-size: 12px; margin: 0;">Data: ${getFormattedDate(report.date)}</p>
@@ -410,7 +412,7 @@ export function ReportTable() {
           </DialogHeader>
           <div className="flex-grow overflow-y-auto -mx-6 px-1 py-4 bg-gray-50 flex justify-center">
              <div
-                className="scale-[0.35] sm:scale-50 md:scale-75 origin-top"
+                className="scale-[0.8] origin-top"
                 dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, signature) : '' }}
              />
           </div>
