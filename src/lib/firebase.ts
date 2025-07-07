@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getAuth, type Auth } from "firebase/auth";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 // IMPORTANT: Add your Firebase project configuration to the .env file.
 // These variables are exposed to the browser, so ensure your Firestore security rules are correctly configured.
@@ -39,6 +40,7 @@ if (typeof window !== 'undefined') {
 let app: FirebaseApp | undefined;
 let db: Firestore | undefined;
 let auth: Auth | undefined;
+let storage: FirebaseStorage | undefined;
 
 // Check if all necessary config values are present
 const isConfigComplete = 
@@ -53,11 +55,13 @@ if (getApps().length > 0) {
   app = getApp();
   db = getFirestore(app);
   auth = getAuth(app);
+  storage = getStorage(app);
 } else if (isConfigComplete) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    storage = getStorage(app);
   } catch (e) {
     console.error("Falha ao inicializar o Firebase. Verifique sua configuração.", e);
   }
@@ -66,4 +70,4 @@ if (getApps().length > 0) {
 }
 
 
-export { db, auth };
+export { db, auth, storage };

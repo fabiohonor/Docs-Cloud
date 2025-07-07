@@ -4,8 +4,9 @@
 import { generateReportDraft, GenerateReportDraftInput } from '@/ai/flows/generate-report-draft';
 import { summarizeTechnicalDetails, SummarizeTechnicalDetailsInput } from '@/ai/flows/summarize-technical-details';
 import { generateReportImage } from '@/ai/flows/generate-report-image';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore';
+import { db, storage } from '@/lib/firebase';
+import { doc, updateDoc, deleteDoc, setDoc, collection } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { z } from 'zod';
 import type { Report } from '@/lib/types';
 
@@ -77,15 +78,27 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
     }
 
     try {
-        if (!db) throw new Error("A conexão com o banco de dados não foi estabelecida.");
+        if (!db || !storage) throw new Error("A conexão com o banco de dados ou armazenamento não foi estabelecida.");
 
-        // 1. Gerar a imagem ilustrativa (se aplicável)
+        const newReportRef = doc(collection(db, 'reports'));
+
         const imageResult = await generateReportImage({
             reportType: parsedInput.data.reportType,
             notes: parsedInput.data.notes,
         });
 
-        // 2. Construir o objeto final do laudo
+        let finalImageUrl: string | null = null;
+        if (imageResult.imageUrl) {
+            try {
+                const storageRef = ref(storage, `reports/${newReportRef.id}/illustration.png`);
+                const uploadTask = await uploadString(storageRef, imageResult.imageUrl, 'data_url');
+                finalImageUrl = await getDownloadURL(uploadTask.ref);
+            } catch (e) {
+                console.error("Falha ao fazer upload da imagem para o Storage:", e);
+                finalImageUrl = null;
+            }
+        }
+
         const newReport: Omit<Report, 'id'> = {
             patientId: parsedInput.data.patientId,
             patientName: parsedInput.data.patientName,
@@ -96,11 +109,10 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
             notes: parsedInput.data.notes,
             authorInfo: parsedInput.data.authorInfo,
             approverInfo: null,
-            imageUrl: imageResult.imageUrl || null, // Adiciona a URL da imagem ou null
+            imageUrl: finalImageUrl,
         };
 
-        // 3. Salvar o laudo no Firestore
-        await addDoc(collection(db, 'reports'), newReport);
+        await setDoc(newReportRef, newReport);
 
         return { success: true };
 
