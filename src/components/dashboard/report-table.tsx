@@ -3,6 +3,15 @@
 import * as React from 'react';
 import type { Report, ReportStatus } from '@/lib/types';
 import {
+  collection,
+  query,
+  onSnapshot,
+  doc,
+  updateDoc,
+  orderBy,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import {
   Table,
   TableBody,
   TableCell,
@@ -31,60 +40,89 @@ const statusStyles: Record<ReportStatus, string> = {
   Rascunho: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
-export function ReportTable({ initialReports }: { initialReports: Report[] }) {
+export function ReportTable() {
   const [reports, setReports] = React.useState<Report[]>([]);
-  const [formattedDates, setFormattedDates] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
-    let reportsFromStorage: Report[];
-    try {
-        const storedReportsRaw = localStorage.getItem('mediclouddocs_reports');
-        if (storedReportsRaw) {
-            reportsFromStorage = JSON.parse(storedReportsRaw);
-        } else {
-            reportsFromStorage = initialReports;
-            localStorage.setItem('mediclouddocs_reports', JSON.stringify(initialReports));
-        }
-    } catch (error) {
-        console.error("Failed to process reports from localStorage", error);
-        reportsFromStorage = initialReports;
+    if (!db.app.options.projectId) {
+      return;
     }
-
-    setReports(reportsFromStorage);
-
-    const newFormattedDates: Record<string, string> = {};
-    reportsFromStorage.forEach(report => {
-      newFormattedDates[report.id] = new Date(report.date).toLocaleDateString('pt-BR');
-    });
-    setFormattedDates(newFormattedDates);
-  }, [initialReports]);
-
-  const handleStatusChange = (id: string, status: ReportStatus) => {
-    const updatedReports = reports.map((report) =>
-      report.id === id ? { ...report, status, signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : undefined, signedAt: status === 'Aprovado' ? new Date().toISOString() : undefined } : report
+    const q = query(collection(db, 'reports'), orderBy('date', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnapshot) => {
+        const reportsData: Report[] = [];
+        querySnapshot.forEach((doc) => {
+          reportsData.push({ id: doc.id, ...doc.data() } as Report);
+        });
+        setReports(reportsData);
+      },
+      (error) => {
+        console.error('Error fetching reports: ', error);
+        toast({
+          variant: 'destructive',
+          title: 'Erro de Conexão',
+          description:
+            'Não foi possível buscar os laudos. Verifique sua configuração do Firebase e as regras de segurança do Firestore.',
+        });
+      }
     );
-    setReports(updatedReports);
+
+    return () => unsubscribe();
+  }, [toast]);
+
+  const getFormattedDate = (dateString: string) => {
+    if (!dateString) return 'Data Inválida';
     try {
-        localStorage.setItem('mediclouddocs_reports', JSON.stringify(updatedReports));
-    } catch (error) {
-        console.error("Failed to save updated reports to localStorage", error);
+      return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+    } catch {
+      return 'Data Inválida';
     }
-    toast({ title: 'Status Atualizado', description: `O status do laudo ${id} foi atualizado para ${status}.` });
   };
-  
-  const handleSign = (id: string) => {
-    const updatedReports = reports.map((report) =>
-      report.id === id ? { ...report, signedBy: 'Dr. Alan Grant', signedAt: new Date().toISOString() } : report
-    );
-    setReports(updatedReports);
+
+  const handleStatusChange = async (id: string, status: ReportStatus) => {
+    const reportRef = doc(db, 'reports', id);
     try {
-        localStorage.setItem('mediclouddocs_reports', JSON.stringify(updatedReports));
+      await updateDoc(reportRef, {
+        status,
+        signedBy: status === 'Aprovado' ? 'Dr. Alan Grant' : null,
+        signedAt: status === 'Aprovado' ? new Date().toISOString() : null,
+      });
+      toast({
+        title: 'Status Atualizado',
+        description: `O status do laudo ${id} foi atualizado para ${status}.`,
+      });
     } catch (error) {
-        console.error("Failed to save signed report to localStorage", error);
+      console.error('Failed to update status in Firestore', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível atualizar o status.',
+      });
     }
-    toast({ title: 'Laudo Assinado', description: `O laudo ${id} foi assinado digitalmente.` });
-  }
+  };
+
+  const handleSign = async (id: string) => {
+    const reportRef = doc(db, 'reports', id);
+    try {
+      await updateDoc(reportRef, {
+        signedBy: 'Dr. Alan Grant',
+        signedAt: new Date().toISOString(),
+      });
+      toast({
+        title: 'Laudo Assinado',
+        description: `O laudo ${id} foi assinado digitalmente.`,
+      });
+    } catch (error) {
+      console.error('Failed to sign report in Firestore', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível assinar o laudo.',
+      });
+    }
+  };
 
   return (
     <div className="rounded-lg border shadow-sm">
@@ -103,7 +141,7 @@ export function ReportTable({ initialReports }: { initialReports: Report[] }) {
             <TableRow key={report.id}>
               <TableCell className="font-medium">{report.patientName}</TableCell>
               <TableCell>{report.reportType}</TableCell>
-              <TableCell>{formattedDates[report.id]}</TableCell>
+              <TableCell>{getFormattedDate(report.date)}</TableCell>
               <TableCell>
                 <Badge variant="outline" className={cn('font-semibold', statusStyles[report.status])}>
                   {report.status}

@@ -23,7 +23,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Report } from '@/lib/types';
+import type { Report, ReportStatus } from '@/lib/types';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const formSchema = z.object({
   patientName: z.string().min(2, { message: 'O nome do paciente é obrigatório.' }),
@@ -78,28 +80,24 @@ export default function NewReportPage() {
     }
   };
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const newReport: Report = {
-      id: `RPT${Date.now().toString().slice(-4)}`,
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const newReport: Omit<Report, 'id'> = {
       patientName: values.patientName,
       reportType: values.reportType,
-      date: new Date().toISOString().split('T')[0],
-      status: 'Pendente',
+      date: new Date().toISOString(),
+      status: 'Pendente' as ReportStatus,
       content: values.draft,
       notes: values.notes,
     };
 
     try {
-      const storedReportsRaw = localStorage.getItem('mediclouddocs_reports');
-      const storedReports: Report[] = storedReportsRaw ? JSON.parse(storedReportsRaw) : [];
-      const updatedReports = [newReport, ...storedReports];
-      localStorage.setItem('mediclouddocs_reports', JSON.stringify(updatedReports));
+      await addDoc(collection(db, 'reports'), newReport);
 
       toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
       router.push('/dashboard');
     } catch (error) {
-      console.error("Failed to save report to localStorage", error);
-      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar o laudo.' });
+      console.error("Failed to save report to Firestore", error);
+      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível salvar o laudo. Verifique sua configuração do Firebase.' });
     }
   };
 

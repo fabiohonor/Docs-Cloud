@@ -1,13 +1,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ReportTable } from '@/components/dashboard/report-table';
-import { mockReports } from '@/lib/mock-data';
 import { PlusCircle } from 'lucide-react';
-import type { Report } from '@/lib/types';
 
 export default function DashboardPage() {
-  // In a real app, this data would be fetched from an API
-  const reports: Report[] = mockReports;
 
   return (
     <div className="flex flex-col gap-8">
@@ -23,7 +19,7 @@ export default function DashboardPage() {
           </Button>
         </Link>
       </div>
-      <ReportTable initialReports={reports} />
+      <ReportTable />
     </div>
   );
 }
