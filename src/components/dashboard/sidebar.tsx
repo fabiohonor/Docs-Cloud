@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Sidebar,
   SidebarHeader,
@@ -14,14 +14,19 @@ import {
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutDashboard, FilePlus2, LifeBuoy, Settings } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, LifeBuoy, Settings, LogOut } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { useTheme } from '@/hooks/use-theme';
 
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { specialty } = useTheme();
+
+  const handleLogout = () => {
+    router.push('/');
+  };
 
   return (
     <Sidebar>
@@ -77,6 +82,12 @@ export function DashboardSidebar() {
                     <Settings />
                     <span>Configurações</span>
                   </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
+                  <LogOut />
+                  <span>Sair</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
