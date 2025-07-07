@@ -42,14 +42,14 @@ const generateReportDraftPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um assistente de IA que ajuda médicos a gerar laudos médicos.
 
-  Com base nas anotações fornecidas, gere um rascunho do laudo médico para o paciente.
-  O laudo deve ser abrangente e bem estruturado.
+  Sua tarefa é gerar um rascunho de laudo médico abrangente e bem estruturado com base nas informações fornecidas.
 
-  Nome do Paciente: {{{patientName}}}
-  Tipo de Laudo: {{{reportType}}}
-  Anotações: {{{notes}}}
+  Informações para o Laudo:
+  - Nome do Paciente: {{{patientName}}}
+  - Tipo de Laudo: {{{reportType}}}
+  - Anotações do Médico: {{{notes}}}
 
-  Rascunho do Laudo:`,
+  Gere o rascunho do laudo e retorne-o no formato JSON solicitado.`,
 });
 
 const generateReportDraftFlow = ai.defineFlow(
@@ -60,6 +60,9 @@ const generateReportDraftFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await generateReportDraftPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('A IA não conseguiu gerar um rascunho de laudo válido.');
+    }
+    return output;
   }
 );

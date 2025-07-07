@@ -20,7 +20,8 @@ export async function generateDraftAction(input: GenerateReportDraftInput) {
     return { draft: result.reportDraft };
   } catch (e) {
     console.error(e);
-    return { error: 'Falha ao gerar o rascunho.' };
+    const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o rascunho.';
+    return { error: errorMessage };
   }
 }
 
@@ -42,6 +43,7 @@ export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
       return { summary: result.patientFriendlySummary };
     } catch (e) {
       console.error(e);
-      return { error: 'Falha ao gerar o resumo.' };
+      const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o resumo.';
+      return { error: errorMessage };
     }
 }

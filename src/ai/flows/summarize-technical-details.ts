@@ -41,8 +41,9 @@ const prompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   prompt: `Você é um especialista médico habilidoso em explicar detalhes médicos técnicos para pacientes de uma forma fácil de entender.
 
-  Por favor, reescreva os seguintes detalhes técnicos de uma forma amigável para o paciente:
-  {{{technicalDetails}}}`,
+  Por favor, reescreva os seguintes detalhes técnicos de uma forma amigável para o paciente e retorne o resultado no formato JSON solicitado.
+  
+  Detalhes Técnicos: {{{technicalDetails}}}`,
 });
 
 const summarizeTechnicalDetailsFlow = ai.defineFlow(
@@ -53,6 +54,9 @@ const summarizeTechnicalDetailsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('A IA não conseguiu gerar um resumo válido.');
+    }
+    return output;
   }
 );
