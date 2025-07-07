@@ -98,36 +98,30 @@ export default function NewReportPage() {
         notes: values.notes,
       };
       
-      const firestorePromise = addDoc(collection(db, 'reports'), newReport);
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 10000) // 10 second timeout
-      );
-
-      await Promise.race([firestorePromise, timeoutPromise]);
+      await addDoc(collection(db, 'reports'), newReport);
 
       toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
       router.push('/dashboard');
     } catch (error) {
       console.error("Failed to save report to Firestore", error);
       
-      let errorMessage = 'Não foi possível salvar o laudo. Verifique sua conexão e configuração do Firebase.';
+      let errorMessage = 'Não foi possível salvar o laudo. Tente novamente.';
 
-      if (error instanceof Error) {
-        if (error.message === "timeout") {
-            errorMessage = "A requisição para o Firebase demorou muito para responder. Verifique sua conexão com a internet e, principalmente, as regras de segurança do seu banco de dados Firestore. Por padrão, o Firestore bloqueia todas as gravações.";
-        } else if ('code' in error) {
-            const firebaseError = error as { code: string; message: string };
-            if (firebaseError.code === 'permission-denied') {
-                errorMessage = 'Erro de permissão. Verifique as regras de segurança do seu banco de dados Firestore.';
-            } else if (firebaseError.code === 'unavailable') {
-                errorMessage = 'Não foi possível conectar ao Firebase. Verifique sua conexão com a internet.';
-            } else {
-                errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
-            }
-        } else {
-             errorMessage = error.message;
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as { code: string; message: string };
+        switch (firebaseError.code) {
+          case 'permission-denied':
+            errorMessage = 'Erro de Permissão: Suas regras de segurança do Firestore não permitem a criação de laudos. Verifique as regras no console do Firebase.';
+            break;
+          case 'unavailable':
+            errorMessage = 'Serviço indisponível. Verifique sua conexão com a internet e tente novamente.';
+            break;
+          default:
+            errorMessage = `Ocorreu um erro ao salvar: ${firebaseError.message}`;
+            break;
         }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
       
       toast({ variant: 'destructive', title: 'Erro ao Enviar', description: errorMessage });
