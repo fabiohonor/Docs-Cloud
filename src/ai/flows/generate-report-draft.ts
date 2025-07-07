@@ -64,8 +64,9 @@ Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico, com base no
     *   **PARA SEÇÕES DE TEXTO (COMO CONCLUSÃO):** Para seções descritivas, o valor pode ser uma string simples ou um objeto com pares chave-valor.
         *   **Exemplo para "Conclusão":** \`"conclusao": "Paciente apresenta quadro anêmico."\`
 3.  **USE AS ANOTAÇÕES:** Preencha os valores da estrutura JSON usando as informações das 'Anotações do Médico'. Se uma anotação não fornecer um valor para um campo técnico, você pode omiti-lo ou usar um valor padrão como "Não avaliado". NÃO INVENTE DADOS NUMÉRICOS.
-4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente ({{{patientName}}}), nome do médico, data ou qualquer outra informação de cabeçalho dentro do JSON.
+4.  **SEM METADADOS:** O objeto JSON deve conter APENAS os dados técnicos do laudo. NÃO inclua nome do paciente, nome do médico, data, tipo de laudo ou qualquer outra informação de cabeçalho dentro do JSON.
 5.  **IDIOMA:** Todo o texto (chaves e valores, quando aplicável) deve ser em Português do Brasil.
+6.  **SEM FORMATAÇÃO:** Não use markdown, asteriscos ou qualquer outra formatação especial nos valores de texto.
 
 **INSTRUÇÃO DE SAÍDA CRÍTICA:**
 Sua resposta DEVE ser SOMENTE o objeto JSON, dentro de um bloco de código markdown. Não inclua texto explicativo antes ou depois.
