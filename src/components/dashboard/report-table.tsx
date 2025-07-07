@@ -45,7 +45,13 @@ export function ReportTable() {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    if (!db.app.options.projectId) {
+    if (!db) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Configuração',
+        description:
+          'A conexão com o banco de dados não foi estabelecida. Verifique as credenciais do Firebase em seu arquivo .env.',
+      });
       return;
     }
     const q = query(collection(db, 'reports'), orderBy('date', 'desc'));
@@ -82,6 +88,7 @@ export function ReportTable() {
   };
 
   const handleStatusChange = async (id: string, status: ReportStatus) => {
+    if (!db) return;
     const reportRef = doc(db, 'reports', id);
     try {
       await updateDoc(reportRef, {
@@ -104,6 +111,7 @@ export function ReportTable() {
   };
 
   const handleSign = async (id: string) => {
+    if (!db) return;
     const reportRef = doc(db, 'reports', id);
     try {
       await updateDoc(reportRef, {

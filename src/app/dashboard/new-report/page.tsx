@@ -83,16 +83,20 @@ export default function NewReportPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    const newReport: Omit<Report, 'id'> = {
-      patientName: values.patientName,
-      reportType: values.reportType,
-      date: new Date().toISOString(),
-      status: 'Pendente' as ReportStatus,
-      content: values.draft,
-      notes: values.notes,
-    };
-
     try {
+      if (!db) {
+        throw new Error("A conexão com o banco de dados não foi estabelecida. Verifique sua configuração do Firebase no arquivo .env.");
+      }
+
+      const newReport: Omit<Report, 'id'> = {
+        patientName: values.patientName,
+        reportType: values.reportType,
+        date: new Date().toISOString(),
+        status: 'Pendente' as ReportStatus,
+        content: values.draft,
+        notes: values.notes,
+      };
+      
       await addDoc(collection(db, 'reports'), newReport);
 
       toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
