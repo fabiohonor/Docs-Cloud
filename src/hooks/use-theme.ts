@@ -1,11 +1,10 @@
-
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext } from 'react';
 
-type Theme = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'brown' | 'red' | 'indigo';
+export type Theme = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'brown' | 'red' | 'indigo';
 
-type ThemeInfo = {
+export type ThemeInfo = {
   name: string;
   key: Theme;
   palette: string[];
@@ -23,66 +22,26 @@ export const themes: ThemeInfo[] = [
   { name: 'Índigo', key: 'indigo', palette: ['#eef2ff', '#a5b4fc', '#6366f1', '#4f46e5', '#312e81'] },
 ];
 
-const THEME_STORAGE_KEY = 'app-theme';
+export const THEME_STORAGE_KEY = 'app-theme';
 
-type ThemeProviderProps = {
-  children: React.ReactNode;
-};
-
-type ThemeProviderState = {
+export type ThemeProviderState = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 };
 
-const initialState: ThemeProviderState = {
+export const initialState: ThemeProviderState = {
   theme: 'blue',
   setTheme: () => null,
 };
 
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
-
-export function ThemeProvider(props: ThemeProviderProps) {
-  const { children } = props;
-
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') {
-      return 'blue';
-    }
-    return (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'blue';
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove(...themes.map(t => `theme-${t.key}`));
-
-    if (theme === 'blue') { // Default theme has no class
-        return;
-    }
-
-    root.classList.add(`theme-${theme}`);
-  }, [theme]);
-
-  const value = useMemo(() => ({
-    theme,
-    setTheme: (newTheme: Theme) => {
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-      setTheme(newTheme);
-    },
-  }), [theme]);
-
-  return (
-    <ThemeProviderContext.Provider value={value}>
-      {children}
-    </ThemeProviderContext.Provider>
-  );
-}
+export const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 
-  if (context === undefined)
+  if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider');
+  }
 
   return context;
 };
