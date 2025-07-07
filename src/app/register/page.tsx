@@ -41,7 +41,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     if (!auth || !db) {
-        toast({ variant: 'destructive', title: 'Erro de Configuração', description: "A conexão com o Firebase não foi estabelecida." });
+        toast({ variant: 'destructive', title: 'Erro de Configuração', description: "A conexão com o Firebase não foi estabelecida. Verifique o arquivo .env e reinicie o servidor." });
         setIsLoading(false);
         return;
     }
@@ -122,7 +122,7 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <Label>Especialidade</Label>
-            <Select onValueChange={setSpecialty} value={specialty}>
+            <Select onValueChange={setSpecialty} value={specialty} required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione sua especialidade" />
               </SelectTrigger>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
                 Voltar para o Login
               </Link>
               <Button type="submit" className="w-full sm:w-auto px-10" disabled={isLoading || !name || !email || !password || !specialty}>
-                {isLoading ? 'Enviando...' : 'CADASTRAR'}
+                {isLoading ? 'Criando conta...' : 'CADASTRAR'}
               </Button>
           </div>
         </form>
