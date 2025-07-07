@@ -30,28 +30,28 @@ export function DashboardSidebar() {
       <SidebarContent className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/dashboard" legacyBehavior passHref>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/dashboard'}
-                tooltip="Dashboard"
-              >
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/dashboard'}
+              tooltip="Dashboard"
+            >
+              <Link href="/dashboard">
                 <LayoutDashboard />
                 <span>Dashboard</span>
-              </SidebarMenuButton>
-            </Link>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <Link href="/dashboard/new-report" legacyBehavior passHref>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === '/dashboard/new-report'}
-                tooltip="New Report"
-              >
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/dashboard/new-report'}
+              tooltip="New Report"
+            >
+              <Link href="/dashboard/new-report">
                 <FilePlus2 />
                 <span>New Report</span>
-              </SidebarMenuButton>
-            </Link>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
