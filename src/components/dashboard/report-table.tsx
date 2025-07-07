@@ -77,7 +77,11 @@ const formatKey = (key: string): string => {
     quantitativeAnalysis: 'Análise Quantitativa',
     referenceValues: 'Valores de Referência',
     result: 'Resultado',
-    observations: 'Observações'
+    observations: 'Observações',
+    eritrograma: 'Eritrograma',
+    leucograma: 'Leucograma',
+    plaquetas: 'Plaquetas',
+    conclusao: 'Conclusão',
   };
 
   if (keyMap[key]) {
@@ -99,39 +103,45 @@ const buildReportHtml = (report: Report): string => {
 
   let contentHtml = '';
   try {
+    // Tenta analisar o conteúdo como JSON
     const data = JSON.parse(report.content);
     
-    const formatSectionValue = (value: any, key?: string): string => {
+    // Função para formatar uma seção do JSON em HTML
+    const formatSectionValue = (value: any): string => {
+      // Se for um objeto (mas não um array), cria uma lista de chave-valor
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
           for (const subKey in value) {
-              list += `<li style="padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
+              list += `<li style="padding: 6px 12px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; background-color: #fafafa;"><span>${formatKey(subKey)}</span> <strong>${value[subKey]}</strong></li>`;
           }
           list += '</ul>';
           return list;
       }
+      // Se for um array, cria uma lista com marcadores
       if (Array.isArray(value)) {
           return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0; font-size: 14px; color: #555; line-height: 1.6;">
               ${value.map(item => `<li>${item}</li>`).join('')}
           </ul>`;
       }
+      // Se for uma string ou número, exibe como um parágrafo
       return `<div style="font-size: 14px; color: #555; line-height: 1.6; white-space: pre-wrap; margin-top: 8px;">${String(value)}</div>`;
     };
 
+    // Itera sobre as chaves do JSON para criar as seções do laudo
     for (const sectionKey in data) {
       if (Object.prototype.hasOwnProperty.call(data, sectionKey)) {
-        const formattedKey = formatKey(sectionKey);
         contentHtml += `
           <div style="margin-top: 25px; page-break-inside: avoid;">
             <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #eee; padding-bottom: 8px;">
-              ${formattedKey}
+              ${formatKey(sectionKey)}
             </h3>
-            ${formatSectionValue(data[sectionKey], sectionKey)}
+            ${formatSectionValue(data[sectionKey])}
           </div>
         `;
       }
     }
   } catch (e) {
+    // Se não for JSON (laudo antigo ou editado), renderiza como texto simples
     contentHtml = `<div style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 14px; color: #333; line-height: 1.7;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
   

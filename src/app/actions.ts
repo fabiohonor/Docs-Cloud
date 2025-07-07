@@ -19,7 +19,9 @@ export async function generateDraftAction(input: GenerateReportDraftInput) {
   }
   try {
     const result = await generateReportDraft(parsedInput.data);
-    return { draft: result.reportDraft };
+    // Transforma o objeto JSON em uma string formatada para o textarea
+    const draftString = JSON.stringify(result.reportData, null, 2);
+    return { draft: draftString };
   } catch (e) {
     console.error(e);
     const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o rascunho.';
