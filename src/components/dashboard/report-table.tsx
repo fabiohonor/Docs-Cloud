@@ -101,12 +101,26 @@ const buildReportHtml = (report: Report): string => {
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
   const signatureDataUrl = report.approverInfo?.signature;
 
+  const computedStyles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
+
+  const getColor = (variable: string, fallback: string) => {
+    if (!computedStyles) return fallback;
+    const value = computedStyles.getPropertyValue(variable).trim();
+    return value ? `hsl(${value})` : fallback;
+  };
+
+  const primary = getColor('--primary', '#3b82f6');
+  const primaryForeground = getColor('--primary-foreground', '#ffffff');
+  const foreground = getColor('--foreground', '#18181b');
+  const muted = getColor('--muted', '#f4f4f5');
+  const mutedForeground = getColor('--muted-foreground', '#71717a');
+  const border = getColor('--border', '#e4e4e7');
+
   const formatSectionValue = (value: any): string => {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const firstChildKey = Object.keys(value)[0];
       const firstChildValue = firstChildKey ? value[firstChildKey] : null;
   
-      // Condição para renderizar como tabela: o primeiro item tem 'valor_encontrado' e 'valor_referencia'
       if (
         firstChildValue &&
         typeof firstChildValue === 'object' &&
@@ -116,10 +130,10 @@ const buildReportHtml = (report: Report): string => {
         let tableHtml = `
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
             <thead>
-              <tr style="border-bottom: 2px solid hsl(var(--border));">
-                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Exame</th>
-                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Valor Encontrado</th>
-                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: hsl(var(--muted-foreground)); text-transform: uppercase; letter-spacing: 0.5px;">Valores de Referência</th>
+              <tr style="border-bottom: 2px solid ${border};">
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: ${mutedForeground}; text-transform: uppercase; letter-spacing: 0.5px;">Exame</th>
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: ${mutedForeground}; text-transform: uppercase; letter-spacing: 0.5px;">Valor Encontrado</th>
+                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: ${mutedForeground}; text-transform: uppercase; letter-spacing: 0.5px;">Valores de Referência</th>
               </tr>
             </thead>
             <tbody>
@@ -129,10 +143,10 @@ const buildReportHtml = (report: Report): string => {
           const testData = value[testName];
           if (typeof testData === 'object' && testData !== null) {
             tableHtml += `
-              <tr style="border-bottom: 1px solid hsl(var(--border));">
+              <tr style="border-bottom: 1px solid ${border};">
                 <td style="padding: 12px 8px;">${formatKey(testName)}</td>
                 <td style="padding: 12px 8px; font-weight: 500;">${testData.valor_encontrado || ''}</td>
-                <td style="padding: 12px 8px; color: hsl(var(--muted-foreground));">${testData.valor_referencia || ''}</td>
+                <td style="padding: 12px 8px; color: ${mutedForeground};">${testData.valor_referencia || ''}</td>
               </tr>
             `;
           }
@@ -142,22 +156,21 @@ const buildReportHtml = (report: Report): string => {
         return tableHtml;
       }
   
-      // Lógica original para renderizar como lista de chave-valor
       let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
       for (const subKey in value) {
-        list += `<li style="padding: 8px 12px; border-bottom: 1px solid hsl(var(--border)); display: flex; justify-content: space-between; align-items: center; border-radius: 4px;"><span style="color: hsl(var(--muted-foreground));">${formatKey(subKey)}</span> <strong style="text-align: right;">${value[subKey]}</strong></li>`;
+        list += `<li style="padding: 8px 12px; border-bottom: 1px solid ${border}; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;"><span style="color: ${mutedForeground};">${formatKey(subKey)}</span> <strong style="text-align: right;">${value[subKey]}</strong></li>`;
       }
       list += '</ul>';
       return list;
     }
   
     if (Array.isArray(value)) {
-      return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0; font-size: 14px; color: #555; line-height: 1.6;">
+      return `<ul style="list-style-type: disc; padding-left: 20px; margin: 10px 0; font-size: 14px; color: ${mutedForeground}; line-height: 1.6;">
           ${value.map((item) => `<li>${item}</li>`).join('')}
       </ul>`;
     }
     
-    return `<div style="font-size: 14px; color: #333; line-height: 1.6; white-space: pre-wrap; margin-top: 8px;">${String(value)}</div>`;
+    return `<div style="font-size: 14px; color: ${foreground}; line-height: 1.6; white-space: pre-wrap; margin-top: 8px;">${String(value)}</div>`;
   };
 
   let contentHtml = '';
@@ -167,7 +180,7 @@ const buildReportHtml = (report: Report): string => {
       if (Object.prototype.hasOwnProperty.call(data, sectionKey)) {
         contentHtml += `
           <div style="margin-top: 25px; page-break-inside: avoid;">
-            <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+            <h3 style="font-size: 16px; font-weight: 600; color: ${foreground}; margin-bottom: 12px; border-bottom: 2px solid ${border}; padding-bottom: 8px;">
               ${formatKey(sectionKey)}
             </h3>
             ${formatSectionValue(data[sectionKey])}
@@ -176,48 +189,48 @@ const buildReportHtml = (report: Report): string => {
       }
     }
   } catch (e) {
-    contentHtml = `<div style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 14px; color: #333; line-height: 1.7;">${report.content.replace(/\n/g, '<br />')}</div>`;
+    contentHtml = `<div style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 14px; color: ${foreground}; line-height: 1.7;">${report.content.replace(/\n/g, '<br />')}</div>`;
   }
   
   const imageSection = report.imageUrl
     ? `
     <div style="margin-top: 30px; page-break-inside: avoid;">
-      <h3 style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #eee; padding-bottom: 8px;">
+      <h3 style="font-size: 16px; font-weight: 600; color: ${foreground}; margin-bottom: 12px; border-bottom: 2px solid ${border}; padding-bottom: 8px;">
         Imagens de Apoio
       </h3>
       <div style="text-align: center; margin-top: 15px;">
-        <img src="${report.imageUrl}" alt="Imagem do Laudo" style="max-width: 80%; height: auto; margin: auto; border-radius: 8px; border: 1px solid #ddd; padding: 5px;" />
+        <img src="${report.imageUrl}" alt="Imagem do Laudo" style="max-width: 80%; height: auto; margin: auto; border-radius: 8px; border: 1px solid ${border}; padding: 5px;" />
       </div>
     </div>
   `
     : '';
 
   return `
-    <div style="background-color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; padding: 40px; width: 21cm; min-height: 29.7cm; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative;">
-      <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #ccc; padding-bottom: 20px; margin-bottom: 30px;">
+    <div style="background-color: #fff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: ${foreground}; padding: 40px; width: 21cm; min-height: 29.7cm; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative;">
+      <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid ${border}; padding-bottom: 20px; margin-bottom: 30px;">
         <img src="${logoUrl}" alt="Logo" style="height: 48px; width: auto;" />
-        <div style="text-align: right; font-size: 12px; color: #555;">
+        <div style="text-align: right; font-size: 12px; color: ${mutedForeground};">
           <p style="margin: 0;"><strong>Protocolo:</strong> ${report.id}</p>
           <p style="margin: 0;"><strong>Data:</strong> ${getFormattedDate(report.date)}</p>
         </div>
       </header>
       
-      <div style="background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px;">
+      <div style="background-color: ${primary}; color: ${primaryForeground}; padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; text-align: center;">
         <h1 style="font-size: 24px; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2;">${report.reportType}</h1>
       </div>
 
-      <div style="background-color: hsl(var(--muted)); padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+      <div style="background-color: ${muted}; padding: 15px 20px; margin-bottom: 30px; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
         <div>
-          <p style="margin: 0 0 4px 0; font-weight: bold; color: hsl(var(--muted-foreground)); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Paciente</p>
+          <p style="margin: 0 0 4px 0; font-weight: bold; color: ${mutedForeground}; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Paciente</p>
           <p style="margin: 0; font-weight: 500;">${report.patientId ? `${report.patientId} - ` : ''}${report.patientName}</p>
         </div>
         ${
           report.authorInfo
             ? `
         <div style="text-align: right;">
-          <p style="margin: 0 0 4px 0; font-weight: bold; color: hsl(var(--muted-foreground)); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Médico Solicitante</p>
+          <p style="margin: 0 0 4px 0; font-weight: bold; color: ${mutedForeground}; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Médico Solicitante</p>
           <p style="margin: 0; font-weight: 500;">${report.authorInfo.name}</p>
-          <p style="margin: 0; font-size: 12px; color: hsl(var(--muted-foreground));">CRM: ${report.authorInfo.crm}</p>
+          <p style="margin: 0; font-size: 12px; color: ${mutedForeground};">CRM: ${report.authorInfo.crm}</p>
         </div>
         `
             : ''
@@ -235,10 +248,10 @@ const buildReportHtml = (report: Report): string => {
             ? `
         <div>
           ${signatureDataUrl ? `<img src="${signatureDataUrl}" alt="Assinatura" style="display: block; margin: 0 auto 10px auto; max-height: 60px; max-width: 200px;" />` : ''}
-          <p style="font-size: 14px; margin: 0; border-top: 1px solid #999; padding-top: 8px; font-weight: bold;">${report.approverInfo.name}</p>
-          <p style="font-size: 12px; color: #777; margin: 4px 0;">${report.approverInfo.specialty}</p>
-          <p style="font-size: 12px; color: #777; margin: 4px 0 8px 0;">CRM: ${report.approverInfo.crm}</p>
-          <p style="font-size: 12px; color: #777; margin: 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
+          <p style="font-size: 14px; margin: 0; border-top: 1px solid ${mutedForeground}; padding-top: 8px; font-weight: bold;">${report.approverInfo.name}</p>
+          <p style="font-size: 12px; color: ${mutedForeground}; margin: 4px 0;">${report.approverInfo.specialty}</p>
+          <p style="font-size: 12px; color: ${mutedForeground}; margin: 4px 0 8px 0;">CRM: ${report.approverInfo.crm}</p>
+          <p style="font-size: 12px; color: ${mutedForeground}; margin: 0;">Assinado em: ${getFormattedDate(report.signedAt || '')}</p>
         </div>
         `
             : ''

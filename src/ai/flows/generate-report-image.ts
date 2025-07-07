@@ -46,7 +46,7 @@ const generateReportImageFlow = ai.defineFlow(
     const imageWorthyTypes = [
         'raio-x', 'raio x', 'radiografia', 'ressonância', 'tomografia', 
         'ultrassom', 'ecocardiograma', 'eletrocardiograma', 'ecg',
-        'eletroencefalograma', 'eeg', 'endoscopia', 'dermatológico'
+        'eletroencefalograma', 'eletroencelalograma', 'eeg', 'endoscopia', 'dermatológico'
     ];
 
     const requiresImage = imageWorthyTypes.some(type => 
