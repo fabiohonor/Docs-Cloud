@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -100,11 +99,11 @@ export function StatsCards() {
                     <p className="text-xs text-muted-foreground">Consultas agendadas</p>
                 </CardContent>
             </Card>
-            <Card className="border-l-4 border-accent">
+            <Card className="border-l-4 border-primary">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Relatórios este Mês</CardTitle>
-                     <div className="p-2 rounded-full bg-accent/10">
-                        <FileText className="h-5 w-5 text-accent" />
+                     <div className="p-2 rounded-full bg-primary/10">
+                        <FileText className="h-5 w-5 text-primary" />
                     </div>
                 </CardHeader>
                 <CardContent>
