@@ -30,7 +30,16 @@ export async function generateDraftAction(input: z.infer<typeof generateDraftSch
     return { draft: draftString };
   } catch (e) {
     console.error(e);
-    const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o rascunho.';
+    let errorMessage = 'Falha ao se comunicar com a IA. Por favor, tente novamente.';
+    if (e instanceof Error) {
+        if (e.message.includes('503') || e.message.toLowerCase().includes('overloaded')) {
+            errorMessage = 'O serviço de IA está sobrecarregado no momento. Por favor, tente novamente em alguns instantes.';
+        } else {
+            errorMessage = e.message;
+        }
+    } else {
+        errorMessage = 'Falha ao gerar o rascunho.';
+    }
     return { error: errorMessage };
   }
 }
@@ -52,9 +61,18 @@ export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
       const result = await summarizeTechnicalDetails(parsedInput.data);
       return { summary: result.patientFriendlySummary };
     } catch (e) {
-      console.error(e);
-      const errorMessage = e instanceof Error ? e.message : 'Falha ao gerar o resumo.';
-      return { error: errorMessage };
+        console.error(e);
+        let errorMessage = 'Falha ao se comunicar com a IA. Por favor, tente novamente.';
+        if (e instanceof Error) {
+            if (e.message.includes('503') || e.message.toLowerCase().includes('overloaded')) {
+                errorMessage = 'O serviço de IA está sobrecarregado no momento. Por favor, tente novamente em alguns instantes.';
+            } else {
+                errorMessage = e.message;
+            }
+        } else {
+            errorMessage = 'Falha ao gerar o resumo.';
+        }
+        return { error: errorMessage };
     }
 }
 
