@@ -61,8 +61,8 @@ export function StatsCards() {
 
     if (loading) {
         return (
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
+            <div className="flex flex-col md:flex-row gap-6">
+                <Card className="flex-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium"><Skeleton className="h-4 w-32" /></CardTitle>
                         <Skeleton className="h-8 w-8 rounded-full" />
@@ -72,7 +72,7 @@ export function StatsCards() {
                         <Skeleton className="h-4 w-40" />
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="flex-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium"><Skeleton className="h-4 w-32" /></CardTitle>
                         <Skeleton className="h-8 w-8 rounded-full" />
@@ -87,8 +87,8 @@ export function StatsCards() {
     }
 
     return (
-        <div className="grid gap-6 md:grid-cols-2">
-             <Card className="border-l-4 border-primary">
+        <div className="flex flex-col md:flex-row gap-6">
+             <Card className="flex-1 border-l-4 border-primary">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Agendamentos Hoje</CardTitle>
                     <div className="p-2 rounded-full bg-primary/10">
@@ -100,7 +100,7 @@ export function StatsCards() {
                     <p className="text-xs text-muted-foreground">Consultas agendadas</p>
                 </CardContent>
             </Card>
-            <Card className="border-l-4 border-accent">
+            <Card className="flex-1 border-l-4 border-accent">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Relatórios este Mês</CardTitle>
                      <div className="p-2 rounded-full bg-accent/10">

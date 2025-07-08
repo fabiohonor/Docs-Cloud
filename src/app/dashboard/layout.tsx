@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/app/dashboard/sidebar';
 import { DashboardHeader } from '@/app/dashboard/header';
 
@@ -14,9 +14,7 @@ export default function DashboardLayout({
         <DashboardSidebar />
         <div className="flex flex-1 flex-col">
           <DashboardHeader />
-          <SidebarInset>
-            <main className="flex flex-1 flex-col p-4 pt-6 md:p-8">{children}</main>
-          </SidebarInset>
+          <main className="flex-1 p-4 pt-6 md:p-8">{children}</main>
         </div>
       </div>
     </SidebarProvider>
