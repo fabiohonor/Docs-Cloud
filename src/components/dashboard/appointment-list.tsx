@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -50,19 +49,19 @@ export function AppointmentList({ appointments }: { appointments: Appointment[] 
       {appointments.map((app) => {
         const CurrentStatusIcon = statusConfig[app.status].icon;
         return (
-          <div key={app.id} className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-4">
-              <Avatar>
+          <div key={app.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-4 min-w-0">
+              <Avatar className="flex-shrink-0">
                 <AvatarFallback>{getInitials(app.patientName)}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
-                <p className="font-semibold">{app.patientName}</p>
+                <p className="font-semibold truncate">{app.patientName}</p>
                 <p className="text-sm text-muted-foreground">
                   {app.time} com {app.doctorName}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 self-end sm:self-center flex-shrink-0">
                 <Badge variant="outline" className={cn('font-semibold', statusConfig[app.status].color)}>
                     <CurrentStatusIcon className="mr-1.5 h-3.5 w-3.5" />
                     {statusConfig[app.status].label}

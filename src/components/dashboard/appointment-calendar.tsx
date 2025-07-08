@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -47,8 +46,8 @@ export function AppointmentCalendar() {
     }, [date, allAppointments]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            <Card className="md:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <Card className="lg:col-span-1">
                 <Calendar
                     mode="single"
                     selected={date}
@@ -66,9 +65,9 @@ export function AppointmentCalendar() {
                     locale={ptBR}
                 />
             </Card>
-            <Card className="md:col-span-2">
+            <Card className="lg:col-span-2">
                 <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                         <div>
                             <h3 className="text-lg font-semibold">
                                 {date ? format(date, "EEEE, dd 'de' MMMM", {locale: ptBR}) : 'Selecione uma data'}
