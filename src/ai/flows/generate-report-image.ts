@@ -42,21 +42,9 @@ const generateReportImageFlow = ai.defineFlow(
     outputSchema: GenerateReportImageOutputSchema,
   },
   async ({ reportType, notes }) => {
-    // Lista de tipos de laudo que justificam uma imagem.
-    const imageWorthyTypes = [
-        'eletro', 'raio-x', 'raio x', 'radiografia', 'ressonância', 'tomografia', 
-        'ultrassom', 'ecocardiograma', 'eletrocardiograma', 'ecg',
-        'eletroencefalograma', 'eeg', 'endoscopia', 'dermatológico'
-    ];
-
-    const requiresImage = imageWorthyTypes.some(type => 
-        reportType.toLowerCase().includes(type)
-    );
-
-    // Se o tipo de laudo não requer imagem, retorna sem gerar.
-    if (!requiresImage) {
-        return { imageUrl: undefined };
-    }
+    // A decisão de gerar uma imagem agora é controlada pelo checkbox na UI,
+    // que chama esta função seletivamente. A lógica interna para decidir
+    // se uma imagem é necessária foi removida para respeitar a escolha do usuário.
 
     const { media } = await ai.generate({
       // IMPORTANTE: Somente este modelo pode gerar imagens.
