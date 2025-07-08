@@ -6,7 +6,7 @@ import { summarizeTechnicalDetails, SummarizeTechnicalDetailsInput } from '@/ai/
 import { generateReportImage } from '@/ai/flows/generate-report-image';
 import { db, storage } from '@/lib/firebase';
 import { doc, updateDoc, deleteDoc, setDoc, collection } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { z } from 'zod';
 import type { Report } from '@/lib/types';
 
@@ -85,6 +85,7 @@ const newReportSchema = z.object({
     draft: z.string(),
     generateImage: z.boolean(),
     authorInfo: z.object({
+        uid: z.string(),
         name: z.string(),
         specialty: z.string(),
         crm: z.string(),
@@ -202,6 +203,47 @@ export async function deleteUserAction(input: { uid: string }) {
     } catch (e) {
         console.error(e);
         const errorMessage = e instanceof Error ? e.message : 'Falha ao excluir o usuário.';
+        return { error: errorMessage };
+    }
+}
+
+const deleteReportSchema = z.object({
+    reportId: z.string(),
+    imageUrl: z.string().nullable().optional(),
+});
+
+export async function deleteReportAction(input: z.infer<typeof deleteReportSchema>) {
+    const parsedInput = deleteReportSchema.safeParse(input);
+    if (!parsedInput.success) {
+        return { error: 'Dados de entrada inválidos para excluir o laudo.' };
+    }
+
+    try {
+        if (!db || !storage) throw new Error("A conexão com o banco de dados ou armazenamento não foi estabelecida.");
+
+        const { reportId, imageUrl } = parsedInput.data;
+
+        // 1. Delete the image from Storage if it exists
+        if (imageUrl) {
+            try {
+                const imageRef = ref(storage, imageUrl);
+                await deleteObject(imageRef);
+            } catch (error: any) {
+                if (error.code !== 'storage/object-not-found') {
+                    console.warn("Falha ao excluir a imagem do laudo, mas prosseguindo para excluir o documento:", error);
+                }
+            }
+        }
+        
+        // 2. Delete the report document from Firestore
+        const reportRef = doc(db, 'reports', reportId);
+        await deleteDoc(reportRef);
+
+        return { success: true };
+
+    } catch (e) {
+        console.error("Falha ao excluir o laudo:", e);
+        const errorMessage = e instanceof Error ? e.message : 'Não foi possível excluir o laudo.';
         return { error: errorMessage };
     }
 }

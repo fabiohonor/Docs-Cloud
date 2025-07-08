@@ -103,6 +103,7 @@ export default function NewReportPage() {
     const reportData = {
         ...values,
         authorInfo: {
+            uid: userProfile.uid,
             name: userProfile.name,
             specialty: userProfile.specialty,
             crm: userProfile.crm,

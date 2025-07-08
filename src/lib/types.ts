@@ -2,6 +2,7 @@
 export type ReportStatus = 'Rascunho' | 'Pendente' | 'Aprovado' | 'Rejeitado';
 
 export interface DoctorInfo {
+  uid: string;
   name: string;
   specialty: string;
   crm: string;

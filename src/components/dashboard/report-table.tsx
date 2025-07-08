@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, CheckCircle, XCircle, FileSignature, Download, FileText, ImageIcon, Loader2 } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, XCircle, FileSignature, Download, FileText, ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
@@ -47,8 +47,20 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
+import { deleteReportAction } from '@/app/actions';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -444,6 +456,7 @@ export function ReportTable() {
     const reportRef = doc(db, 'reports', id);
     try {
       const approverInfo: DoctorInfo | null = status === 'Aprovado' ? {
+        uid: userProfile.uid,
         name: userProfile.name,
         specialty: userProfile.specialty,
         crm: userProfile.crm,
@@ -466,6 +479,15 @@ export function ReportTable() {
         title: 'Erro',
         description: 'Não foi possível atualizar o status.',
       });
+    }
+  };
+
+  const handleDeleteReport = async (report: Report) => {
+    const result = await deleteReportAction({ reportId: report.id, imageUrl: report.imageUrl });
+    if (result.error) {
+        toast({ variant: 'destructive', title: 'Erro ao Excluir', description: result.error });
+    } else {
+        toast({ title: 'Laudo Excluído', description: 'O laudo foi removido com sucesso.' });
     }
   };
 
@@ -535,9 +557,10 @@ export function ReportTable() {
                         </DropdownMenuPortal>
                       </DropdownMenuSub>
 
-                      <DropdownMenuSeparator />
+                      
                       {userProfile?.role === 'admin' && report.status === 'Pendente' && (
                         <>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleStatusChange(report.id, 'Aprovado')}>
                             <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                             Aprovar
@@ -553,6 +576,41 @@ export function ReportTable() {
                            <FileSignature className="mr-2 h-4 w-4" />
                            Aprovado por {report.approverInfo?.name.split(' ')[0]}
                          </DropdownMenuItem>
+                      )}
+
+                      {userProfile && (userProfile.role === 'admin' || (report.authorInfo && userProfile.uid === report.authorInfo.uid)) && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem
+                                      onSelect={(e) => e.preventDefault()}
+                                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                  >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      <span>Excluir Laudo</span>
+                                  </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                  <AlertDialogTitle>Excluir Laudo?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                      Esta ação não pode ser desfeita. Isso removerá permanentemente o
+                                      laudo e sua imagem associada do sistema.
+                                  </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                      className="bg-destructive hover:bg-destructive/90"
+                                      onClick={() => handleDeleteReport(report)}
+                                  >
+                                      Excluir
+                                  </AlertDialogAction>
+                                  </AlertDialogFooter>
+                              </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
