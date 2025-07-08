@@ -109,12 +109,12 @@ const buildReportHtml = (report: Report): string => {
     return value ? `hsl(${value})` : fallback;
   };
 
-  const primary = getColor('--primary', '#3b82f6');
-  const primaryForeground = getColor('--primary-foreground', '#ffffff');
-  const foreground = getColor('--foreground', '#18181b');
-  const muted = getColor('--muted', '#f4f4f5');
-  const mutedForeground = getColor('--muted-foreground', '#71717a');
-  const border = getColor('--border', '#e4e4e7');
+  const primary = getColor('--primary', 'hsl(210 40% 60%)');
+  const primaryForeground = getColor('--primary-foreground', 'hsl(210 40% 10%)');
+  const foreground = getColor('--foreground', 'hsl(215 25% 20%)');
+  const muted = getColor('--muted', 'hsl(210 30% 88%)');
+  const mutedForeground = getColor('--muted-foreground', 'hsl(210 20% 45%)');
+  const border = getColor('--border', 'hsl(210 20% 84%)');
 
   const formatSectionValue = (value: any): string => {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
