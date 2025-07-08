@@ -12,7 +12,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen">
         <DashboardSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-w-0">
           <DashboardHeader />
           <main className="flex-1 p-4 pt-6 md:p-8">{children}</main>
         </div>
