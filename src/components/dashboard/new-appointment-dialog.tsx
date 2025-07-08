@@ -47,10 +47,11 @@ const appointmentFormSchema = z.object({
   time: z.string({ required_error: 'A hora do agendamento é obrigatória.' }),
 });
 
-const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'
-];
+const timeSlots = Array.from({ length: 48 }, (_, i) => {
+    const hours = Math.floor(i / 2);
+    const minutes = (i % 2) * 30;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+});
 
 export function NewAppointmentDialog({ trigger }: { trigger: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
