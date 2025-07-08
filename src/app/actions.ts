@@ -98,6 +98,9 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
         return { error: 'Dados de entrada para o laudo são inválidos.' };
     }
 
+    // A action agora pode retornar um aviso se a imagem falhar, mas o laudo for salvo.
+    let imageWarning: string | undefined = undefined;
+
     try {
         if (!db || !storage) throw new Error("A conexão com o banco de dados ou armazenamento não foi estabelecida.");
 
@@ -105,19 +108,30 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
 
         let finalImageUrl: string | null = null;
         if (parsedInput.data.generateImage) {
-            const imageResult = await generateReportImage({
-                reportType: parsedInput.data.reportType,
-                notes: parsedInput.data.notes,
-            });
-    
-            if (imageResult.imageUrl) {
-                try {
+            try {
+                const imageResult = await generateReportImage({
+                    reportType: parsedInput.data.reportType,
+                    notes: parsedInput.data.notes,
+                });
+        
+                if (imageResult?.imageUrl) {
                     const storageRef = ref(storage, `reports/${newReportRef.id}/illustration.png`);
                     const uploadTask = await uploadString(storageRef, imageResult.imageUrl, 'data_url');
                     finalImageUrl = await getDownloadURL(uploadTask.ref);
-                } catch (e) {
-                    console.error("Falha ao fazer upload da imagem para o Storage:", e);
-                    finalImageUrl = null; // Garante que a falha no upload não impeça a criação do laudo
+                } else {
+                    // Se a IA não retornar uma URL, mesmo sem erro.
+                    imageWarning = "A IA não conseguiu gerar uma imagem para este laudo.";
+                }
+            } catch (e) {
+                console.error("Falha ao gerar ou fazer upload da imagem:", e);
+                finalImageUrl = null;
+                let errorMessage = e instanceof Error ? e.message : 'Ocorreu um erro desconhecido ao gerar a imagem.';
+                if (errorMessage.includes('503') || errorMessage.toLowerCase().includes('overloaded')) {
+                    imageWarning = 'O serviço de IA está sobrecarregado e não pôde gerar a imagem. O laudo foi salvo sem ela.';
+                } else if (errorMessage.toLowerCase().includes('finish reason: safety')) {
+                    imageWarning = 'A imagem não pôde ser gerada devido aos filtros de segurança da IA. O laudo foi salvo sem ela.';
+                } else {
+                    imageWarning = "Falha ao gerar a imagem do laudo, mas o laudo foi salvo.";
                 }
             }
         }
@@ -137,7 +151,7 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
 
         await setDoc(newReportRef, newReport);
 
-        return { success: true };
+        return { success: true, warning: imageWarning };
 
     } catch (e) {
         console.error("Falha ao criar o laudo:", e);

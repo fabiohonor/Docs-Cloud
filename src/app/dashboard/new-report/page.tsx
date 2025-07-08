@@ -114,8 +114,12 @@ export default function NewReportPage() {
 
     if (result.error) {
         toast({ variant: 'destructive', title: 'Erro ao Enviar', description: result.error });
-    } else {
-        toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
+    } else if (result.success) {
+        if (result.warning) {
+            toast({ variant: 'default', title: 'Laudo Enviado com Aviso', description: result.warning, className: 'bg-yellow-100 border-yellow-400 text-yellow-800' });
+        } else {
+            toast({ title: 'Laudo Enviado', description: 'O laudo foi enviado para aprovação.' });
+        }
         router.push('/dashboard');
     }
 

@@ -26,13 +26,10 @@ export type GenerateReportImageOutput = z.infer<typeof GenerateReportImageOutput
 export async function generateReportImage(
   input: GenerateReportImageInput
 ): Promise<GenerateReportImageOutput> {
-    try {
-        return await generateReportImageFlow(input);
-    } catch (error) {
-        console.error("Erro ao gerar imagem para o laudo:", error);
-        // Retorna com sucesso, mas sem URL, para não bloquear o processo principal.
-        return { imageUrl: undefined };
-    }
+    // A captura de erro foi movida para a action que chama esta função,
+    // para que o usuário possa ser notificado em caso de falha.
+    // Se a geração da imagem falhar, a criação do laudo ainda pode prosseguir.
+    return await generateReportImageFlow(input);
 }
 
 const generateReportImageFlow = ai.defineFlow(
