@@ -16,7 +16,7 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutDashboard, FilePlus2, LifeBuoy, Settings, LogOut, User, Users } from 'lucide-react';
+import { LayoutDashboard, FilePlus2, LifeBuoy, Settings, LogOut, User, Users, CalendarDays, FileText } from 'lucide-react';
 import { Logo } from '@/components/icons';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -61,6 +61,32 @@ export function DashboardSidebar() {
               <Link href="/dashboard">
                 <LayoutDashboard />
                 <span>Painel</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+           <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname.startsWith('/dashboard/appointments')}
+              tooltip="Agendamentos"
+            >
+              <Link href="/dashboard/appointments">
+                <CalendarDays />
+                <span>Agendamentos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarSeparator className="my-1" />
+           <p className="px-2 py-1 text-xs font-semibold text-muted-foreground group-data-[collapsible=icon]:hidden">Laudos</p>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/dashboard/reports'}
+              tooltip="Ver Laudos"
+            >
+              <Link href="/dashboard/reports">
+                <FileText />
+                <span>Ver Laudos</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

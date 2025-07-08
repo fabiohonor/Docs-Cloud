@@ -24,6 +24,19 @@ export interface Report {
   imageUrl?: string | null;
 }
 
+export type AppointmentStatus = 'Agendada' | 'Atendida' | 'Adiada' | 'Cancelada';
+
+export interface Appointment {
+  id: string;
+  patientName: string;
+  doctorUid: string;
+  doctorName: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  status: AppointmentStatus;
+  createdAt: string; // ISO string
+}
+
 export type Theme = 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'cyan' | 'brown' | 'red' | 'indigo';
 
 export type ThemeInfo = {

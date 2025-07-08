@@ -1,14 +1,15 @@
-
 'use server';
 
 import { generateReportDraft, GenerateReportDraftInput } from '@/ai/flows/generate-report-draft';
 import { summarizeTechnicalDetails, SummarizeTechnicalDetailsInput } from '@/ai/flows/summarize-technical-details';
 import { generateReportImage } from '@/ai/flows/generate-report-image';
 import { db, storage } from '@/lib/firebase';
-import { doc, updateDoc, deleteDoc, setDoc, collection } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, setDoc, collection, addDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { z } from 'zod';
-import type { Report } from '@/lib/types';
+import type { Report, Appointment } from '@/lib/types';
+
+// --- Report Actions ---
 
 const generateDraftSchema = z.object({
   notes: z.string(),
@@ -76,7 +77,6 @@ export async function summarizeAction(input: SummarizeTechnicalDetailsInput) {
     }
 }
 
-// Esquema para o novo laudo que será salvo
 const newReportSchema = z.object({
     patientId: z.string(),
     patientName: z.string(),
@@ -99,7 +99,6 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
         return { error: 'Dados de entrada para o laudo são inválidos.' };
     }
 
-    // A action agora pode retornar um aviso se a imagem falhar, mas o laudo for salvo.
     let imageWarning: string | undefined = undefined;
 
     try {
@@ -120,7 +119,6 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
                     const uploadTask = await uploadString(storageRef, imageResult.imageUrl, 'data_url');
                     finalImageUrl = await getDownloadURL(uploadTask.ref);
                 } else {
-                    // Se a IA não retornar uma URL, mesmo sem erro.
                     imageWarning = "A IA não conseguiu gerar uma imagem para este laudo.";
                 }
             } catch (e) {
@@ -161,6 +159,47 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
     }
 }
 
+const deleteReportSchema = z.object({
+    reportId: z.string(),
+    imageUrl: z.string().nullable().optional(),
+});
+
+export async function deleteReportAction(input: z.infer<typeof deleteReportSchema>) {
+    const parsedInput = deleteReportSchema.safeParse(input);
+    if (!parsedInput.success) {
+        return { error: 'Dados de entrada inválidos para excluir o laudo.' };
+    }
+
+    try {
+        if (!db || !storage) throw new Error("A conexão com o banco de dados ou armazenamento não foi estabelecida.");
+
+        const { reportId, imageUrl } = parsedInput.data;
+
+        if (imageUrl) {
+            try {
+                const imageRef = ref(storage, imageUrl);
+                await deleteObject(imageRef);
+            } catch (error: any) {
+                if (error.code !== 'storage/object-not-found') {
+                    console.warn("Falha ao excluir a imagem do laudo, mas prosseguindo para excluir o documento:", error);
+                }
+            }
+        }
+        
+        const reportRef = doc(db, 'reports', reportId);
+        await deleteDoc(reportRef);
+
+        return { success: true };
+
+    } catch (e) {
+        console.error("Falha ao excluir o laudo:", e);
+        const errorMessage = e instanceof Error ? e.message : 'Não foi possível excluir o laudo.';
+        return { error: errorMessage };
+    }
+}
+
+
+// --- User Management Actions ---
 
 const userRoleSchema = z.object({
   uid: z.string(),
@@ -207,43 +246,58 @@ export async function deleteUserAction(input: { uid: string }) {
     }
 }
 
-const deleteReportSchema = z.object({
-    reportId: z.string(),
-    imageUrl: z.string().nullable().optional(),
+// --- Appointment Actions ---
+
+const appointmentSchema = z.object({
+    patientName: z.string().min(1, "O nome do paciente é obrigatório."),
+    doctorUid: z.string().min(1, "Selecione um médico."),
+    date: z.string().min(1, "A data é obrigatória."),
+    time: z.string().min(1, "A hora é obrigatória."),
 });
 
-export async function deleteReportAction(input: z.infer<typeof deleteReportSchema>) {
-    const parsedInput = deleteReportSchema.safeParse(input);
+export async function addAppointmentAction(data: z.infer<typeof appointmentSchema>, doctorName: string) {
+    const parsedInput = appointmentSchema.safeParse(data);
     if (!parsedInput.success) {
-        return { error: 'Dados de entrada inválidos para excluir o laudo.' };
+      return { error: 'Dados de entrada inválidos.' };
     }
 
     try {
-        if (!db || !storage) throw new Error("A conexão com o banco de dados ou armazenamento não foi estabelecida.");
+        if (!db) throw new Error("A conexão com o banco de dados não foi estabelecida.");
 
-        const { reportId, imageUrl } = parsedInput.data;
+        const newAppointment: Omit<Appointment, 'id'> = {
+            ...parsedInput.data,
+            doctorName,
+            status: 'Agendada',
+            createdAt: new Date().toISOString(),
+        };
 
-        // 1. Delete the image from Storage if it exists
-        if (imageUrl) {
-            try {
-                const imageRef = ref(storage, imageUrl);
-                await deleteObject(imageRef);
-            } catch (error: any) {
-                if (error.code !== 'storage/object-not-found') {
-                    console.warn("Falha ao excluir a imagem do laudo, mas prosseguindo para excluir o documento:", error);
-                }
-            }
-        }
-        
-        // 2. Delete the report document from Firestore
-        const reportRef = doc(db, 'reports', reportId);
-        await deleteDoc(reportRef);
-
+        await addDoc(collection(db, 'appointments'), newAppointment);
         return { success: true };
-
     } catch (e) {
-        console.error("Falha ao excluir o laudo:", e);
-        const errorMessage = e instanceof Error ? e.message : 'Não foi possível excluir o laudo.';
+        console.error("Falha ao criar o agendamento:", e);
+        const errorMessage = e instanceof Error ? e.message : 'Não foi possível salvar o agendamento.';
         return { error: errorMessage };
+    }
+}
+
+const updateStatusSchema = z.object({
+    id: z.string(),
+    status: z.enum(['Agendada', 'Atendida', 'Adiada', 'Cancelada']),
+});
+
+export async function updateAppointmentStatusAction(input: z.infer<typeof updateStatusSchema>) {
+    const parsedInput = updateStatusSchema.safeParse(input);
+    if (!parsedInput.success) {
+      return { error: 'Dados de entrada inválidos.' };
+    }
+    try {
+      if (!db) throw new Error("A conexão com o banco de dados não foi estabelecida.");
+      const appointmentRef = doc(db, 'appointments', parsedInput.data.id);
+      await updateDoc(appointmentRef, { status: parsedInput.data.status });
+      return { success: true };
+    } catch (e) {
+      console.error("Falha ao atualizar o status do agendamento:", e);
+      const errorMessage = e instanceof Error ? e.message : 'Não foi possível atualizar o status.';
+      return { error: errorMessage };
     }
 }
