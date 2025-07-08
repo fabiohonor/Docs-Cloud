@@ -14,9 +14,11 @@ const generateDraftSchema = z.object({
   notes: z.string(),
   patientName: z.string(),
   reportType: z.string(),
+  generateTable: z.boolean(),
+  generateInterpretation: z.boolean(),
 });
 
-export async function generateDraftAction(input: GenerateReportDraftInput) {
+export async function generateDraftAction(input: z.infer<typeof generateDraftSchema>) {
   const parsedInput = generateDraftSchema.safeParse(input);
   if (!parsedInput.success) {
     return { error: 'Dados de entrada inválidos.' };
@@ -63,6 +65,7 @@ const newReportSchema = z.object({
     reportType: z.string(),
     notes: z.string(),
     draft: z.string(),
+    generateImage: z.boolean(),
     authorInfo: z.object({
         name: z.string(),
         specialty: z.string(),
@@ -82,20 +85,22 @@ export async function submitReportAction(reportData: z.infer<typeof newReportSch
 
         const newReportRef = doc(collection(db, 'reports'));
 
-        const imageResult = await generateReportImage({
-            reportType: parsedInput.data.reportType,
-            notes: parsedInput.data.notes,
-        });
-
         let finalImageUrl: string | null = null;
-        if (imageResult.imageUrl) {
-            try {
-                const storageRef = ref(storage, `reports/${newReportRef.id}/illustration.png`);
-                const uploadTask = await uploadString(storageRef, imageResult.imageUrl, 'data_url');
-                finalImageUrl = await getDownloadURL(uploadTask.ref);
-            } catch (e) {
-                console.error("Falha ao fazer upload da imagem para o Storage:", e);
-                finalImageUrl = null;
+        if (parsedInput.data.generateImage) {
+            const imageResult = await generateReportImage({
+                reportType: parsedInput.data.reportType,
+                notes: parsedInput.data.notes,
+            });
+    
+            if (imageResult.imageUrl) {
+                try {
+                    const storageRef = ref(storage, `reports/${newReportRef.id}/illustration.png`);
+                    const uploadTask = await uploadString(storageRef, imageResult.imageUrl, 'data_url');
+                    finalImageUrl = await getDownloadURL(uploadTask.ref);
+                } catch (e) {
+                    console.error("Falha ao fazer upload da imagem para o Storage:", e);
+                    finalImageUrl = null; // Garante que a falha no upload não impeça a criação do laudo
+                }
             }
         }
 

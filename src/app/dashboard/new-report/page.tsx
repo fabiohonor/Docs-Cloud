@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   patientId: z.string().min(1, { message: 'O ID do paciente é obrigatório.' }),
@@ -32,6 +34,9 @@ const formSchema = z.object({
   reportType: z.string().min(2, { message: 'O tipo de laudo é obrigatório.' }),
   notes: z.string().min(10, { message: 'Forneça algumas anotações para gerar um rascunho.' }),
   draft: z.string(),
+  generateImage: z.boolean().default(false),
+  generateTable: z.boolean().default(false),
+  generateInterpretation: z.boolean().default(false),
 });
 
 export default function NewReportPage() {
@@ -52,17 +57,20 @@ export default function NewReportPage() {
       reportType: '',
       notes: '',
       draft: '',
+      generateImage: false,
+      generateTable: false,
+      generateInterpretation: false,
     },
   });
 
   const handleGenerateDraft = async () => {
-    const { patientName, reportType, notes } = form.getValues();
+    const { patientName, reportType, notes, generateTable, generateInterpretation } = form.getValues();
     if (!patientName || !reportType || !notes) {
       form.trigger(['patientName', 'reportType', 'notes']);
       return;
     }
     setIsGenerating(true);
-    const result = await generateDraftAction({ patientName, reportType, notes });
+    const result = await generateDraftAction({ patientName, reportType, notes, generateTable, generateInterpretation });
     setIsGenerating(false);
 
     if (result.error) {
@@ -168,7 +176,7 @@ export default function NewReportPage() {
           <Card>
             <CardHeader>
               <CardTitle>Geração de Rascunho com IA</CardTitle>
-              <CardDescription>Forneça anotações e deixe a IA gerar um rascunho estruturado. Para laudos de imagem, uma ilustração será gerada no envio.</CardDescription>
+              <CardDescription>Forneça anotações e selecione as opções para guiar a IA.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -182,6 +190,44 @@ export default function NewReportPage() {
                   </FormItem>
                 )}
               />
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <FormField
+                  control={form.control}
+                  name="generateImage"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 h-full">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <FormLabel className="font-normal">Gerar Imagem</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="generateTable"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 h-full">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <FormLabel className="font-normal">Usar formato de tabela</FormLabel>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="generateInterpretation"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3 h-full">
+                      <FormControl>
+                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <FormLabel className="font-normal">Gerar Interpretação Clínica</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="button" onClick={handleGenerateDraft} disabled={isGenerating}>
                 {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 Gerar Rascunho com IA

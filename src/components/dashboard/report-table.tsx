@@ -83,6 +83,7 @@ const formatKey = (key: string): string => {
     leucograma: 'Leucograma',
     plaquetas: 'Plaquetas',
     conclusao: 'Conclusão',
+    interpretacao_clinica: 'Interpretação Clínica',
   };
 
   if (keyMap[key]) {
@@ -185,6 +186,7 @@ const buildReportHtml = (report: Report, currentTheme: Theme): string => {
       const firstChildKey = Object.keys(value)[0];
       const firstChildValue = firstChildKey ? value[firstChildKey] : null;
   
+      // Renderiza tabelas de 3 colunas (Exame, Valor, Referência)
       if (
         firstChildValue &&
         typeof firstChildValue === 'object' &&
@@ -220,12 +222,21 @@ const buildReportHtml = (report: Report, currentTheme: Theme): string => {
         return tableHtml;
       }
   
-      let list = '<ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">';
+      // Renderiza tabelas de 2 colunas (Parâmetro, Valor)
+      let tableHtml = `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+          <tbody>
+      `;
       for (const subKey in value) {
-        list += `<li style="padding: 8px 12px; border-bottom: 1px solid ${border}; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;"><span style="color: ${mutedForeground};">${formatKey(subKey)}</span> <strong style="text-align: right;">${value[subKey]}</strong></li>`;
+        tableHtml += `
+          <tr style="border-bottom: 1px solid ${border};">
+            <td style="padding: 12px 8px; text-align: left; color: ${mutedForeground}; width: 40%;">${formatKey(subKey)}</td>
+            <td style="padding: 12px 8px; text-align: left; font-weight: 500;">${value[subKey]}</td>
+          </tr>
+        `;
       }
-      list += '</ul>';
-      return list;
+      tableHtml += '</tbody></table>';
+      return tableHtml;
     }
   
     if (Array.isArray(value)) {

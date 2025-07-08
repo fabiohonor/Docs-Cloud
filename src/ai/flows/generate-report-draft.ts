@@ -16,6 +16,14 @@ const GenerateReportDraftInputSchema = z.object({
   notes: z.string().describe('Anotações do médico para gerar o laudo.'),
   patientName: z.string().describe('O nome do paciente.'),
   reportType: z.string().describe('O tipo de laudo médico a ser gerado.'),
+  generateTable: z
+    .boolean()
+    .describe('Se deve gerar os resultados em um formato de tabela comparativa.'),
+  generateInterpretation: z
+    .boolean()
+    .describe(
+      'Se deve gerar uma seção de interpretação clínica ou conclusão.'
+    ),
 });
 export type GenerateReportDraftInput = z.infer<
   typeof GenerateReportDraftInputSchema
@@ -57,18 +65,17 @@ Sua tarefa é gerar um objeto JSON para o corpo de um laudo médico. A estrutura
 
 **REGRAS ESTRITAS:**
 1.  **ESTRUTURA JSON:** O resultado DEVE ser um único objeto JSON.
-2.  **CONTEÚDO TÉCNICO E ESTRUTURA:** Com base no 'Tipo de Laudo', crie uma estrutura JSON com seções e campos tecnicamente apropriados.
-    *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA, BETA HCG, EXAME DE DNA):** Se o 'Tipo de Laudo' for um destes ou um exame quantitativo similar, você **DEVE OBRIGATORIAMENTE** usar um objeto onde cada chave é o nome da seção do exame (ex: "eritrograma"). O valor deve ser um objeto onde cada chave é o nome do teste (ex: "Hemácias") e o valor é um objeto com \`valor_encontrado\` e \`valor_referencia\`.
-        *   Exemplo para Hemograma: \`"eritrograma": { "Hemácias": { "valor_encontrado": "4.5 milhões/mm³", "valor_referencia": "4.2 - 5.4 milhões/mm³" } }\`
-        *   Exemplo para Beta HCG: \`"dosagem_hcg": { "Beta HCG Quantitativo": { "valor_encontrado": "250 mUI/mL", "valor_referencia": "< 5.0 mUI/mL para não grávidas" } }\`
-    *   **PARA LAUDOS DESCRITIVOS (COMO RAIO-X, EEG):** Use seções com texto descritivo.
-        *   Exemplo: \`"achados": "Não foram observadas opacidades, consolidações ou derrames pleurais.", "impressao_diagnostica": "Exame dentro dos limites da normalidade."\`
+2.  **CONTEÚDO TÉCNICO E ESTRUTURA:** Com base no 'Tipo de Laudo' e nas opções, crie uma estrutura JSON com seções e campos tecnicamente apropriados.
+    *   **PARA RESULTADOS TABULARES (COMO HEMOGRAMA, BETA HCG, EXAME DE DNA) OU LAUDOS COM MÚLTIPLOS PARÂMETROS (COMO ELETROCARDIOGRAMA):** {{#if generateTable}}Se solicitado via \`generateTable\`, ou se o tipo de laudo for inerentemente tabular,{{/if}} você **DEVE OBRIGATORIAMENTE** usar um objeto onde cada chave é o nome da seção do exame.
+        *   Para exames de sangue, o valor deve ser um objeto com \`valor_encontrado\` e \`valor_referencia\`. Exemplo: \`"eritrograma": { "Hemácias": { "valor_encontrado": "4.5 milhões/mm³", "valor_referencia": "4.2 - 5.4 milhões/mm³" } }\`
+        *   Para exames como Eletrocardiograma, o valor deve ser um objeto simples com chave-valor. Exemplo: \`"resultados_ecg": { "Ritmo cardíaco": "110 bpm", "Ritmo basal": "Taquicardia sinusal" }\`
+    *   **PARA LAUDOS DESCRITIVOS (COMO RAIO-X):** Use seções com texto descritivo. Exemplo: \`"achados": "Não foram observadas opacidades...", "impressao_diagnostica": "Exame dentro dos limites da normalidade."\`
 3.  **PREENCHIMENTO DE DADOS:** Use as 'Anotações do Médico' como fonte principal. **Se as anotações forem insuficientes, sua tarefa é gerar dados ilustrativos e plausíveis para criar um rascunho completo e realista.** O objetivo é produzir um modelo que o médico possa editar, não um formulário em branco.
     *   **NÃO USE "Não avaliado" ou "Não informado".**
-    *   **NÃO INVENTE dados numéricos clinicamente específicos** se não houver base nas anotações. Para exames de sangue, se as anotações indicarem normalidade, gere valores dentro da faixa de referência.
-4.  **SEM METADADOS:** O JSON deve conter APENAS o corpo técnico do laudo. NÃO inclua nome do paciente, nome do médico, data, ou o tipo de laudo como um campo de texto.
-5.  **IDIOMA:** Todo o texto (chaves e valores) deve ser em Português do Brasil.
-6.  **SEM FORMATAÇÃO:** Não use markdown (como asteriscos), HTML ou qualquer formatação especial nos valores de texto.
+4.  **INTERPRETAÇÃO/CONCLUSÃO:** {{#if generateInterpretation}}O JSON DEVE conter uma seção final chamada "interpretacao_clinica" ou "conclusao" com um resumo dos achados em texto.{{/if}}
+5.  **SEM METADADOS:** O JSON deve conter APENAS o corpo técnico do laudo. NÃO inclua nome do paciente, nome do médico, data, ou o tipo de laudo como um campo de texto.
+6.  **IDIOMA:** Todo o texto (chaves e valores) deve ser em Português do Brasil.
+7.  **SEM FORMATAÇÃO:** Não use markdown (como asteriscos), HTML ou qualquer formatação especial nos valores de texto.
 
 **INSTRUÇÃO DE SAÍDA CRÍTICA:**
 Sua resposta DEVE ser SOMENTE o objeto JSON, dentro de um bloco de código markdown. Não inclua texto explicativo antes ou depois.
