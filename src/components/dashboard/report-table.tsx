@@ -128,7 +128,7 @@ const buildReportHtml = (report: Report): string => {
         'valor_referencia' in firstChildValue
       ) {
         let tableHtml = `
-          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; font-family: 'Courier New', Courier, monospace;">
             <thead>
               <tr style="border-bottom: 2px solid ${border};">
                 <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: ${mutedForeground}; text-transform: uppercase; letter-spacing: 0.5px;">Exame</th>
