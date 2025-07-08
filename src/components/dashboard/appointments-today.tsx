@@ -56,7 +56,7 @@ export function AppointmentsToday() {
 
 
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Agendamentos de Hoje</CardTitle>
@@ -71,7 +71,7 @@ export function AppointmentsToday() {
           }
         />
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="space-y-4">
              <Skeleton className="h-12 w-full" />
@@ -81,7 +81,7 @@ export function AppointmentsToday() {
         ) : appointments.length > 0 ? (
           <AppointmentList appointments={appointments} />
         ) : (
-          <div className="flex flex-col items-center justify-center text-center py-12">
+          <div className="flex h-full flex-col items-center justify-center text-center">
             <CalendarOff className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold">Nenhum agendamento para hoje</h3>
             <p className="text-muted-foreground mb-6">Comece criando um novo agendamento.</p>
