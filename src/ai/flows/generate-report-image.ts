@@ -44,9 +44,9 @@ const generateReportImageFlow = ai.defineFlow(
   async ({ reportType, notes }) => {
     // Lista de tipos de laudo que justificam uma imagem.
     const imageWorthyTypes = [
-        'raio-x', 'raio x', 'radiografia', 'ressonância', 'tomografia', 
+        'eletro', 'raio-x', 'raio x', 'radiografia', 'ressonância', 'tomografia', 
         'ultrassom', 'ecocardiograma', 'eletrocardiograma', 'ecg',
-        'eletroencefalograma', 'eletroencelalograma', 'eeg', 'endoscopia', 'dermatológico'
+        'eletroencefalograma', 'eeg', 'endoscopia', 'dermatológico'
     ];
 
     const requiresImage = imageWorthyTypes.some(type => 
