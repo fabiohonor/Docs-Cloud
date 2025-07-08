@@ -65,7 +65,7 @@ const generateReportImageFlow = ai.defineFlow(
       A imagem deve ser limpa, profissional e adequada para um documento médico. Não inclua texto na imagem.
       Use as seguintes anotações como contexto para o conteúdo da imagem, se relevante: "${notes}".
       Exemplos de estilo:
-      - Para 'Eletrocardiograma': Ondas de ECG estilizadas em um fundo limpo.
+      - Para 'Eletrocardiograma (ECG)': Ondas de um exame de ECG, com os complexos P, QRS e T claramente visíveis, mas de forma estilizada e limpa, sobre um fundo neutro.
       - Para 'Raio-X de fratura': Uma imagem estilizada de um osso com uma fratura claramente visível.
       - Para 'Ressonância Magnética do cérebro': Uma representação artística das varreduras cerebrais.
       - Para 'Eletroencefalograma': Ondas cerebrais estilizadas (alfa, beta, etc.) em um fundo limpo.

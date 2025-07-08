@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { DoctorInfo, Report, ReportStatus, UserProfile } from '@/lib/types';
+import type { DoctorInfo, Report, ReportStatus, Theme } from '@/lib/types';
 import {
   collection,
   query,
@@ -48,6 +48,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { useTheme } from '@/hooks/use-theme';
 
 const statusStyles: Record<ReportStatus, string> = {
   Aprovado: 'bg-green-100 text-green-800 border-green-200',
@@ -95,26 +96,89 @@ const formatKey = (key: string): string => {
     .replace(/^./, (str) => str.toUpperCase());
 };
 
-const buildReportHtml = (report: Report): string => {
+const themeColors = {
+  blue: {
+    primary: 'hsl(210 40% 60%)',
+    primaryForeground: 'hsl(210 40% 10%)',
+    foreground: 'hsl(215 25% 20%)',
+    muted: 'hsl(210 30% 88%)',
+    mutedForeground: 'hsl(210 20% 45%)',
+    border: 'hsl(210 20% 84%)',
+  },
+  green: {
+    primary: 'hsl(145 63% 42%)',
+    primaryForeground: 'hsl(145 63% 98%)',
+    foreground: 'hsl(145 50% 15%)',
+    muted: 'hsl(145 65% 92%)',
+    mutedForeground: 'hsl(145 50% 25%)',
+    border: 'hsl(145 60% 85%)',
+  },
+  purple: {
+    primary: 'hsl(262 88% 65%)',
+    primaryForeground: 'hsl(262 88% 98%)',
+    foreground: 'hsl(262 60% 20%)',
+    muted: 'hsl(262 85% 94%)',
+    mutedForeground: 'hsl(262 60% 30%)',
+    border: 'hsl(262 80% 88%)',
+  },
+  orange: {
+    primary: 'hsl(25 95% 53%)',
+    primaryForeground: 'hsl(25 95% 98%)',
+    foreground: 'hsl(25 70% 20%)',
+    muted: 'hsl(35 90% 94%)',
+    mutedForeground: 'hsl(25 70% 30%)',
+    border: 'hsl(35 85% 88%)',
+  },
+  pink: {
+    primary: 'hsl(327 82% 60%)',
+    primaryForeground: 'hsl(327 82% 98%)',
+    foreground: 'hsl(334 70% 21%)',
+    muted: 'hsl(330 90% 96%)',
+    mutedForeground: 'hsl(330 60% 31%)',
+    border: 'hsl(330 85% 90%)',
+  },
+  cyan: {
+    primary: 'hsl(187 94% 43%)',
+    primaryForeground: 'hsl(187 94% 98%)',
+    foreground: 'hsl(187 94% 15%)',
+    muted: 'hsl(187 75% 92%)',
+    mutedForeground: 'hsl(187 94% 25%)',
+    border: 'hsl(187 70% 85%)',
+  },
+  brown: {
+    primary: 'hsl(30 35% 55%)',
+    primaryForeground: 'hsl(30 35% 98%)',
+    foreground: 'hsl(30 20% 25%)',
+    muted: 'hsl(30 22% 92%)',
+    mutedForeground: 'hsl(30 20% 35%)',
+    border: 'hsl(30 20% 85%)',
+  },
+  red: {
+    primary: 'hsl(0 84% 60%)',
+    primaryForeground: 'hsl(0 84% 98%)',
+    foreground: 'hsl(0 70% 20%)',
+    muted: 'hsl(0 85% 94%)',
+    mutedForeground: 'hsl(0 70% 30%)',
+    border: 'hsl(0 80% 88%)',
+  },
+  indigo: {
+    primary: 'hsl(239 84% 67%)',
+    primaryForeground: 'hsl(239 84% 98%)',
+    foreground: 'hsl(239 60% 20%)',
+    muted: 'hsl(239 85% 94%)',
+    mutedForeground: 'hsl(239 60% 30%)',
+    border: 'hsl(239 80% 88%)',
+  },
+};
+
+const buildReportHtml = (report: Report, currentTheme: Theme): string => {
   if (!report) return '';
 
   const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
   const signatureDataUrl = report.approverInfo?.signature;
 
-  const computedStyles = typeof window !== 'undefined' ? getComputedStyle(document.documentElement) : null;
-
-  const getColor = (variable: string, fallback: string) => {
-    if (!computedStyles) return fallback;
-    const value = computedStyles.getPropertyValue(variable).trim();
-    return value ? `hsl(${value})` : fallback;
-  };
-
-  const primary = getColor('--primary', 'hsl(210 40% 60%)');
-  const primaryForeground = getColor('--primary-foreground', 'hsl(210 40% 10%)');
-  const foreground = getColor('--foreground', 'hsl(215 25% 20%)');
-  const muted = getColor('--muted', 'hsl(210 30% 88%)');
-  const mutedForeground = getColor('--muted-foreground', 'hsl(210 20% 45%)');
-  const border = getColor('--border', 'hsl(210 20% 84%)');
+  const colors = themeColors[currentTheme] || themeColors.blue;
+  const { primary, primaryForeground, foreground, muted, mutedForeground, border } = colors;
 
   const formatSectionValue = (value: any): string => {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -267,6 +331,7 @@ export function ReportTable() {
   const [isDownloading, setIsDownloading] = React.useState<{id: string, format: 'pdf' | 'jpg'} | null>(null);
   const [viewingReport, setViewingReport] = React.useState<Report | null>(null);
   const { userProfile } = useAuth();
+  const { theme: currentTheme } = useTheme();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -312,7 +377,7 @@ export function ReportTable() {
     reportElement.style.left = '-9999px';
     reportElement.style.top = '0';
     
-    reportElement.innerHTML = buildReportHtml(report); 
+    reportElement.innerHTML = buildReportHtml(report, currentTheme); 
 
     document.body.appendChild(reportElement);
 
@@ -498,7 +563,7 @@ export function ReportTable() {
           <div className="flex-grow overflow-y-auto -mx-6 px-1 py-4 bg-muted/50 flex justify-center">
              <div
                 className="transform scale-[0.85] origin-top"
-                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport) : '' }}
+                dangerouslySetInnerHTML={{ __html: viewingReport ? buildReportHtml(viewingReport, currentTheme) : '' }}
              />
           </div>
           <DialogFooter className="pt-4 border-t">
