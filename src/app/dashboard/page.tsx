@@ -1,5 +1,6 @@
 
 import { AppointmentsToday } from '@/components/dashboard/appointments-today';
+import { StatsCards } from '@/components/dashboard/stats-cards';
 
 export default function DashboardPage() {
   return (
@@ -10,6 +11,7 @@ export default function DashboardPage() {
           Visualize seus agendamentos e tarefas importantes do dia.
         </p>
       </div>
+      <StatsCards />
       <AppointmentsToday />
     </div>
   );
